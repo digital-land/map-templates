@@ -1,0 +1,19 @@
+{
+  "name": "map-templates",
+  "version": "0.0.1",
+  "description": "A proof-of-concept for splitting out maps into templates, consumable by Nunjucks",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/digital-land/map-templates.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/digital-land/map-templates/issues"
+  },
+  "homepage": "https://github.com/digital-land/map-templates#readme"
+}

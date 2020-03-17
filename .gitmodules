@@ -1,0 +1,9 @@
+[submodule "boundaries-collection"]
+	path = boundaries-collection
+	url = https://github.com/digital-land/boundaries-collection.git
+[submodule "brownfield-land-collection"]
+	path = brownfield-land-collection
+	url = https://github.com/digital-land/brownfield-land-collection.git
+[submodule "organisation-collection"]
+	path = organisation-collection
+	url = https://github.com/digital-land/organisation-collection.git
