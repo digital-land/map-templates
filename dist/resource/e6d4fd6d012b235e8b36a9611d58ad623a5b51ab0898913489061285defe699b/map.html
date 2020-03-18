@@ -1,0 +1,220 @@
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" crossorigin="" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.fullscreen@1.6.0/Control.FullScreen.css" crossorigin="" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet-sidebar@0.2.2/src/L.Control.Sidebar.css" crossorigin="" />
+
+<style>
+  body {
+    margin: 0;
+  }
+
+  #map {
+    width: 960px;
+    height: 640px;
+    transform: translate(-50%,-50%);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+  }
+
+  .leaflet-sidebar {
+    display: none;
+    width: 200px;
+  }
+
+  .leaflet-sidebar.visible {
+    display: block;
+  }
+
+  .leaflet-sidebar .close {
+    z-index: 10000;
+  }
+
+  .leaflet-marker-icon.marker-cluster {
+    line-height: 18px;
+    text-align: center;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    background: #fff;
+    border: 2px solid #222;
+  }
+</style>
+
+<div id="map"></div>
+<div id="sidebar"></div>
+
+<script>
+  var geoJson = []
+  var organisations = [{"organisation":"local-authority-eng:TAU","wikidata":"Q73072791","name":"Taunton Deane Borough Council","website":"https://www.tauntondeane.gov.uk","twitter":"","statistical-geography":"E07000190","toid":"","opendatacommunities":"http://opendatacommunities.org/id/district-council/taunton-deane","opendatacommunities-area":"http://opendatacommunities.org/id/geography/administration/nmd/E07000190","billing-authority":"E3333","census-area":"40UE","local-authority-type":"NMD","esd-inventories":"","start-date":"","end-date":"2019-03-31"}]
+  var brownfield = [{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"06/08/0010","site-address":"Sandhill Park, Bishops Lydeard","site-plan-url":"https://www.tauntondeane.gov.uk/media/2057/sandhill-park-mansion-sandhill-park-bishops-lydeard-06080010.pdf","deliverable":"","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"51.062229","longitude":"-3.205686","hectares":"57.24","minimum-net-dwellings":"28","maximum-net-dwellings":"28","start-date":"2017-12-31","end-date":"","notes":". Residential development of 54 units","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"06/15/0019","site-address":"Sandhill Park Mansion, Sandhill Park, Bishops Lydeard","site-plan-url":"https://www.tauntondeane.gov.uk/media/2056/sandhill-park-mansion-sandhill-park-06150019.pdf","deliverable":"","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"51.064456","longitude":"-3.001253","hectares":"13.29","minimum-net-dwellings":"8","maximum-net-dwellings":"8","start-date":"2017-12-31","end-date":"","notes":". Conversion of barn and stable courtyard into 8 no dwellings","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"25/12/0032oa","site-address":"Langford Mead, Norton Fitzwarren, TA2","site-plan-url":"https://www.tauntondeane.gov.uk/media/2047/langford-mead-norton-fitzwarren-25120032.pdf","deliverable":"","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"outline planning permission","hazardous-substances":"","latitude":"51.027494","longitude":"-3.138134","hectares":"6.77","minimum-net-dwellings":"227","maximum-net-dwellings":"227","start-date":"2017-12-31","end-date":"","notes":". Mixed use development inc. up to 407 dwellings, idustrial units on 2.78ha","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"25/13/0014","site-address":"Langford Mead, Norton Fitzwarren, TA2","site-plan-url":"https://www.tauntondeane.gov.uk/media/2046/langford-mead-norton-fitzwarren-23130014.pdf","deliverable":"","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"reserved matters approval","hazardous-substances":"","latitude":"51.028645","longitude":"-3.139018","hectares":"1.93","minimum-net-dwellings":"86","maximum-net-dwellings":"86","start-date":"2017-12-31","end-date":"","notes":". Residential development phase H6 Phase 2","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"25/12/0017oa","site-address":"Little Acre, Station Road, Norton Fitzwarren, TA2 6RG","site-plan-url":"https://www.tauntondeane.gov.uk/media/2048/little-acre-station-road-norton-fitzwarren.pdf","deliverable":"","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"outline planning permission","hazardous-substances":"","latitude":"51.023592","longitude":"-3.149987","hectares":"0.14","minimum-net-dwellings":"6","maximum-net-dwellings":"6","start-date":"2017-12-31","end-date":"","notes":". Erection of 6 dwellings","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"38/05/0430","site-address":"57-59 Staplegrove Road, Taunton, TA1 1DG","site-plan-url":"https://www.tauntondeane.gov.uk/media/2176/57-59-staplegrove-road-taunton.pdf","deliverable":"","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"51.019507","longitude":"-3.109253","hectares":"0.16","minimum-net-dwellings":"14","maximum-net-dwellings":"14","start-date":"2017-12-31","end-date":"","notes":". Conversion of guesthouse to 14 two bedroom flats","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"38/12/0164","site-address":"Rear 12-13 East Reach, Taunton, TA1 3EW","site-plan-url":"https://www.tauntondeane.gov.uk/media/2118/rear-12-13-east-reach-taunton.pdf","deliverable":"","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"51.015419","longitude":"-3.095512","hectares":"0.05","minimum-net-dwellings":"10","maximum-net-dwellings":"10","start-date":"2017-12-31","end-date":"","notes":". Erection of block of 8 flats and block of 2 flats","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"38/11/0596","site-address":"Areas A, B, C and D, Firepool Lock, Taunton, TA1","site-plan-url":"https://www.tauntondeane.gov.uk/media/2119/areas-a-b-c-and-d-firepool-lock-taunton.pdf","deliverable":"","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"reserved matters approval","hazardous-substances":"","latitude":"51.022345","longitude":"-3.099226","hectares":"2.4","minimum-net-dwellings":"204","maximum-net-dwellings":"204","start-date":"2017-12-31","end-date":"","notes":". Redevelopment to provide 204 dwellings","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"38/13/0477oa","site-address":"Area I, Firepool Lock, Taunton, TA1","site-plan-url":"https://www.tauntondeane.gov.uk/media/2120/area-i-firepool-lock-taunton.pdf","deliverable":"","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"outline planning permission","hazardous-substances":"","latitude":"51.022457","longitude":"-3.098772","hectares":"0.24","minimum-net-dwellings":"44","maximum-net-dwellings":"44","start-date":"2017-12-31","end-date":"","notes":". Redevelopment for up to 44 dwellings","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"38/15/0506","site-address":"Area H, Firepool Lock, Taunton, TA1","site-plan-url":"https://www.tauntondeane.gov.uk/media/2121/area-h-firepool-lock-taunton.pdf","deliverable":"","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"reserved matters approval","hazardous-substances":"","latitude":"51.022501","longitude":"-3.098887","hectares":"0.63","minimum-net-dwellings":"55","maximum-net-dwellings":"55","start-date":"2017-12-31","end-date":"","notes":". Erection of 55 apartments (inc. 45 retirement)","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"38/14/0076","site-address":"Area F, Firepool Lock, Taunton, TA1","site-plan-url":"https://www.tauntondeane.gov.uk/media/2122/area-f-firepool-lock-taunton.pdf","deliverable":"","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"51.022873","longitude":"-3.092779","hectares":"0.3","minimum-net-dwellings":"24","maximum-net-dwellings":"24","start-date":"2017-12-31","end-date":"","notes":". Erection of 19 affordable flats and 5 affordable houses","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"38/12/0234","site-address":"Kings College, South Road, Taunton, TA1 3LA","site-plan-url":"https://www.tauntondeane.gov.uk/media/2177/kings-college-south-road.pdf","deliverable":"","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"51.010647","longitude":"-3.095271","hectares":"1.39","minimum-net-dwellings":"58","maximum-net-dwellings":"58","start-date":"2017-12-31","end-date":"","notes":". Erection of 58 dwellings (inc. 15 affordable)","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"38/12/0429","site-address":"Freemantle House, Priory Avenue, Taunton, TA1 1XX","site-plan-url":"https://www.tauntondeane.gov.uk/media/2123/freemantle-house-priory-avenue-taunton.pdf","deliverable":"","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"51.018606","longitude":"-3.097997","hectares":"0.01","minimum-net-dwellings":"5","maximum-net-dwellings":"5","start-date":"2017-12-31","end-date":"","notes":". Erection of extension to provide 3x1 bed and 2x2 bed flats","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"38/13/0420","site-address":"1 Kingston Road, Taunton, TA2 7ED","site-plan-url":"https://www.tauntondeane.gov.uk/media/2126/1-kingston-road-taunton.pdf","deliverable":"","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"51.023835","longitude":"-3.104237","hectares":"0.05","minimum-net-dwellings":"40","maximum-net-dwellings":"40","start-date":"2017-12-31","end-date":"","notes":". Demolition of snooker hall and erection of 40 flats","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"38/14/0355","site-address":"Parmin Close, Taunton, TA1 2JY","site-plan-url":"https://www.tauntondeane.gov.uk/media/2130/parmin-close-taunton.pdf","deliverable":"","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"51.01384","longitude":"-3.084527","hectares":"0.95","minimum-net-dwellings":"47","maximum-net-dwellings":"47","start-date":"2017-12-31","end-date":"","notes":". Demolish 31 dwellings and erect 66 retirement flats and 12 assisted living flats","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"38/16/0169","site-address":"49 East Reach, Taunton, TA1 3EX","site-plan-url":"https://www.tauntondeane.gov.uk/media/2149/49-east-reach-taunton.pdf","deliverable":"","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"51.016143","longitude":"-3.091195","hectares":"0.02","minimum-net-dwellings":"11","maximum-net-dwellings":"11","start-date":"2017-12-31","end-date":"","notes":". Demolish retail unit with flat above and erect 12 flats","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"38/16/0425","site-address":"45 Wood Street, Taunton, TA1 1UW","site-plan-url":"https://www.tauntondeane.gov.uk/media/2158/45-wood-street-taunton.pdf","deliverable":"","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"51.019084","longitude":"-3.106462","hectares":"0.1","minimum-net-dwellings":"9","maximum-net-dwellings":"9","start-date":"2017-12-31","end-date":"","notes":". Demolish buildings and erect 9 dwellings","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"38/16/0472","site-address":"Laxton/Blackbrook Road, Taunton, TA1 2UR","site-plan-url":"https://www.tauntondeane.gov.uk/media/2161/laxton-blackbrook-road-taunton.pdf","deliverable":"","ownership":"owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"51.022058","longitude":"-3.069034","hectares":"0.09","minimum-net-dwellings":"8","maximum-net-dwellings":"8","start-date":"2017-12-31","end-date":"","notes":". Demolish garages and erect 8 flats","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"38/16/0484co","site-address":"1-11a Bridge Street, Taunton, TA1 1JY","site-plan-url":"https://www.tauntondeane.gov.uk/media/2163/1-11a-bridge-street-taunton.pdf","deliverable":"","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"51.017798","longitude":"-3.104521","hectares":"0.06","minimum-net-dwellings":"6","maximum-net-dwellings":"6","start-date":"2017-12-31","end-date":"","notes":". COU 1st floor offices to 5 flats","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"43/09/0062","site-address":"1-1a Cornhill, Wellington, TA21 8LU","site-plan-url":"https://www.tauntondeane.gov.uk/media/2170/1-1a-cornhill-wellington.pdf","deliverable":"","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"50.978463","longitude":"-3.228044","hectares":"0.01","minimum-net-dwellings":"5","maximum-net-dwellings":"5","start-date":"2017-12-31","end-date":"","notes":". Conversion of single flat to 6 one bed flats","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"43/11/0080","site-address":"Tone Works, Milverton Road, Wellington, TA21 0BQ","site-plan-url":"https://www.tauntondeane.gov.uk/media/2171/tone-works-wellington.pdf","deliverable":"","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"50.989605","longitude":"-3.245066","hectares":"1.9","minimum-net-dwellings":"90","maximum-net-dwellings":"90","start-date":"2017-12-31","end-date":"","notes":". Redevelopment of Tone Mill to include dwellings","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"43/12/0032","site-address":"rear of 21 High Street (vet clinic), Wellington, TA21 8QS","site-plan-url":"https://www.tauntondeane.gov.uk/media/2172/rear-of-21-high-street-wellington.pdf","deliverable":"","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"50.97971","longitude":"-3.227479","hectares":"0.08","minimum-net-dwellings":"7","maximum-net-dwellings":"7","start-date":"2017-12-31","end-date":"","notes":". Erection of 7 dwellings","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"43/14/0137","site-address":"Rear of former Three Cups, Fore Street, Wellington, TA21 8AQ","site-plan-url":"https://www.tauntondeane.gov.uk/media/2079/rear-of-former-three-cups-fore-street-wellington.pdf","deliverable":"","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"50.976804","longitude":"-3.229297","hectares":"0.09","minimum-net-dwellings":"7","maximum-net-dwellings":"7","start-date":"2017-12-31","end-date":"","notes":". Erection of 7 dwellings","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"43/15/0059","site-address":"Weavers Arms/Oaken Ground, Rockwell Green, Wellington, TA21 9BY","site-plan-url":"https://www.tauntondeane.gov.uk/media/2081/weavers-arms-rockwell-green-wellington.pdf","deliverable":"","ownership":"owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"50.975059","longitude":"-3.246357","hectares":"0.46","minimum-net-dwellings":"16","maximum-net-dwellings":"16","start-date":"2017-12-31","end-date":"","notes":". Demolish public house, public toilets & 10 council houses and erect 26 dwellings","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"49/06/0008","site-address":"The Brewery, Golden Hill, Wiveliscombe TA2 8LH","site-plan-url":"https://www.tauntondeane.gov.uk/media/2180/the-brewery-golden-hill-wiveliscombe.pdf","deliverable":"","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"51.043152","longitude":"-3.309551","hectares":"0.26","minimum-net-dwellings":"14","maximum-net-dwellings":"14","start-date":"2017-12-31","end-date":"","notes":". Demolition of old brewery buildings to form 14 dwellings","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"49/15/0044","site-address":"Staceys Yard, Mill Lane, Wiveliscombe, TA4 2LX","site-plan-url":"https://www.tauntondeane.gov.uk/media/2099/staceys-yard-mill-lane-wiveliscombe.pdf","deliverable":"","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"51.03987","longitude":"-3.307134","hectares":"0.28","minimum-net-dwellings":"8","maximum-net-dwellings":"8","start-date":"2017-12-31","end-date":"","notes":". COU from builders yard, erection of 8 dwellings","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"49/15/0058CO","site-address":"The Office Building, Station Road, Wiveliscombe, TA4 2LX","site-plan-url":"https://www.tauntondeane.gov.uk/media/2100/the-office-building-station-road-wiveliscombe.pdf","deliverable":"","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"51.040223","longitude":"-3.306987","hectares":"0.06","minimum-net-dwellings":"8","maximum-net-dwellings":"8","start-date":"2017-12-31","end-date":"","notes":". COU office to flats","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"53/16/0006","site-address":"Former Tone Vale Hospital, Graham Way, Cotford St Luke, TA4 1GQ","site-plan-url":"https://www.tauntondeane.gov.uk/media/2104/former-tone-vale-hospital-cotford-st-luke.pdf","deliverable":"","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"51.038027","longitude":"-3.186615","hectares":"0.35","minimum-net-dwellings":"10","maximum-net-dwellings":"10","start-date":"2017-12-31","end-date":"","notes":". Conversion of lodge house, demolition of ballroom to create 10 dwellings","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"38/16/0345","site-address":"Quantock House, Paul Street, Taunton, TA1 3NX","site-plan-url":"https://www.tauntondeane.gov.uk/media/2202/quantock-house-paul-street-taunton.pdf","deliverable":"","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"51.01299","longitude":"-3.101342","hectares":"0.38","minimum-net-dwellings":"58","maximum-net-dwellings":"58","start-date":"2017-12-31","end-date":"","notes":". Demolition of office block and erection of care led facility (62 bed care home and 58 assisted living apartments)","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"38/17/0224","site-address":"42-44 Upper Street/23 The Crescent, Taunton, TA1 4EB","site-plan-url":"https://www.tauntondeane.gov.uk/media/2201/42-44-upper-street-23-the-crescent-taunton.pdf","deliverable":"","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"51.01203","longitude":"-3.104969","hectares":"0.3","minimum-net-dwellings":"8","maximum-net-dwellings":"8","start-date":"2017-12-31","end-date":"","notes":". Conversion of offices to flats","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"SHLAATAUN005","site-address":"Former Livestock Market, Firepool, Taunton, TA1 1PN","site-plan-url":"https://www.tauntondeane.gov.uk/media/2200/former-livestock-market-firepool-taunton.pdf","deliverable":"","ownership":"not owned by a public authority","planning-permission-status":"not permissioned","planning-permission-type":"","hazardous-substances":"","latitude":"51.020125","longitude":"-3.102908","hectares":"3.91","minimum-net-dwellings":"200","maximum-net-dwellings":"200","start-date":"2017-12-31","end-date":"","notes":"","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"SHLAATAUN007","site-address":"Coal Orchard, Taunton, TA1 1JP","site-plan-url":"https://www.tauntondeane.gov.uk/media/2199/coal-orchard-taunton.pdf","deliverable":"","ownership":"not owned by a public authority","planning-permission-status":"pending decision","planning-permission-type":"","hazardous-substances":"","latitude":"51.017261","longitude":"-3.103382","hectares":"0.45","minimum-net-dwellings":"36","maximum-net-dwellings":"36","start-date":"2017-12-31","end-date":"","notes":"","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"SHLAATAUN015","site-address":"Bus Depot, Hamilton Road, Taunton, TA1 2BF","site-plan-url":"https://www.tauntondeane.gov.uk/media/2198/bus-depot-hamilton-road-taunton.pdf","deliverable":"","ownership":"not owned by a public authority","planning-permission-status":"not permissioned","planning-permission-type":"","hazardous-substances":"","latitude":"51.016996","longitude":"-3.086511","hectares":"0.51","minimum-net-dwellings":"50","maximum-net-dwellings":"50","start-date":"2017-12-31","end-date":"","notes":"","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"SHLAATAUN016","site-address":"High Street, East & West, Taunton, TA1","site-plan-url":"https://www.tauntondeane.gov.uk/media/2197/high-street-east-west-taunton.pdf","deliverable":"","ownership":"mixed ownership","planning-permission-status":"not permissioned","planning-permission-type":"","hazardous-substances":"","latitude":"51.012231","longitude":"-3.105601","hectares":"3.6","minimum-net-dwellings":"210","maximum-net-dwellings":"210","start-date":"2017-12-31","end-date":"","notes":"","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"SHLAATAUN017","site-address":"St James Street, Taunton, TA1 1JH","site-plan-url":"https://www.tauntondeane.gov.uk/media/2196/st-james-street-taunton.pdf","deliverable":"","ownership":"mixed ownership","planning-permission-status":"not permissioned","planning-permission-type":"","hazardous-substances":"","latitude":"51.017296","longitude":"-3.100632","hectares":"0.17","minimum-net-dwellings":"45","maximum-net-dwellings":"45","start-date":"2017-12-31","end-date":"","notes":"","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"SHLAATAUN018","site-address":"Kilkenny Car Park, Taunton, TA2 7BL","site-plan-url":"https://www.tauntondeane.gov.uk/media/2195/kilkenny-car-park-taunton.pdf","deliverable":"","ownership":"owned by a public authority","planning-permission-status":"not permissioned","planning-permission-type":"","hazardous-substances":"","latitude":"51.023632","longitude":"-3.103819","hectares":"0.62","minimum-net-dwellings":"40","maximum-net-dwellings":"40","start-date":"2017-12-31","end-date":"","notes":"","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"SHLAATAUN019","site-address":"Former Cameron Dixon Works, Albemarle Road, Taunton, TA1 1BJ","site-plan-url":"https://www.tauntondeane.gov.uk/media/2194/former-cameron-dixon-works-albemarle-road-taunton.pdf","deliverable":"","ownership":"not owned by a public authority","planning-permission-status":"not permissioned","planning-permission-type":"","hazardous-substances":"","latitude":"51.021884","longitude":"-3.107998","hectares":"1.09","minimum-net-dwellings":"30","maximum-net-dwellings":"30","start-date":"2017-12-31","end-date":"","notes":"","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"SHLAATAUN020","site-address":"Tangier, Castle Street, Taunton, TA1 4AS","site-plan-url":"https://www.tauntondeane.gov.uk/media/2193/tangier-castle-street-taunton.pdf","deliverable":"","ownership":"mixed ownership","planning-permission-status":"not permissioned","planning-permission-type":"","hazardous-substances":"","latitude":"51.013718","longitude":"-3.110896","hectares":"5.24","minimum-net-dwellings":"90","maximum-net-dwellings":"90","start-date":"2017-12-31","end-date":"","notes":"","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"SHLAATAUN021","site-address":"Wood Street, Taunton, TA1","site-plan-url":"https://www.tauntondeane.gov.uk/media/2192/wood-street-taunton.pdf","deliverable":"","ownership":"mixed ownership","planning-permission-status":"not permissioned","planning-permission-type":"","hazardous-substances":"","latitude":"51.016005","longitude":"-3.106874","hectares":"1.68","minimum-net-dwellings":"80","maximum-net-dwellings":"80","start-date":"2017-12-31","end-date":"","notes":"","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"SHLAATAUN024","site-address":"Police Station, Shuttern, Taunton, TA1 4ET","site-plan-url":"https://www.tauntondeane.gov.uk/media/2191/police-station-shuttern-taunton.pdf","deliverable":"","ownership":"not owned by a public authority","planning-permission-status":"not permissioned","planning-permission-type":"","hazardous-substances":"","latitude":"51.010634","longitude":"-3.108","hectares":"1.23","minimum-net-dwellings":"0","maximum-net-dwellings":"0","start-date":"2017-12-31","end-date":"","notes":"","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"SHLAAWELL001","site-address":"Swallowfield Factory, Wellington, TA21 8NL","site-plan-url":"https://www.tauntondeane.gov.uk/media/2190/swallowfield-factory-wellington.pdf","deliverable":"","ownership":"not owned by a public authority","planning-permission-status":"not permissioned","planning-permission-type":"","hazardous-substances":"","latitude":"50.983111","longitude":"-3.239293","hectares":"1.47","minimum-net-dwellings":"50","maximum-net-dwellings":"50","start-date":"2017-12-31","end-date":"","notes":"","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"SHLAAWELL002","site-address":"Swallowfield West of Station Road, Wellington, TA21 8NL","site-plan-url":"https://www.tauntondeane.gov.uk/media/2189/swallowfield-west-of-station-road-wellington.pdf","deliverable":"","ownership":"not owned by a public authority","planning-permission-status":"not permissioned","planning-permission-type":"","hazardous-substances":"","latitude":"50.982972","longitude":"-3.241312","hectares":"1.04","minimum-net-dwellings":"35","maximum-net-dwellings":"35","start-date":"2017-12-31","end-date":"","notes":"","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"},{"entry-date":"2017-12-31","organisation":"local-authority-eng:TAU","site":"SHLAAWELL003","site-address":"Relyon, Wellington TA21 8NN","site-plan-url":"https://www.tauntondeane.gov.uk/media/2188/relyon-wellington.pdf","deliverable":"","ownership":"not owned by a public authority","planning-permission-status":"not permissioned","planning-permission-type":"","hazardous-substances":"","latitude":"50.983413","longitude":"-3.23876","hectares":"8.19","minimum-net-dwellings":"250","maximum-net-dwellings":"250","start-date":"2017-12-31","end-date":"","notes":"","resource":"e6d4fd6d012b235e8b36a9611d58ad623a5b51ab0898913489061285defe699b"}]
+</script>
+
+<script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet.fullscreen@1.6.0/Control.FullScreen.js" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet-sidebar@0.2.2/src/L.Control.Sidebar.js" crossorigin=""></script>
+<script src="https://unpkg.com/papaparse@5.1.1/papaparse.min.js" crossorigin=""></script>
+
+<script>
+var map = L.map('map', {
+  preferCanvas: true,
+  fullscreenControl: true
+}).setView([52.561928, -1.464854], 7)
+
+// Tile layers
+L.tileLayer('https://tiles.wmflabs.org/bw-mapnik/{z}/{x}/{y}.png', {
+  id: 'base',
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+}).addTo(map)
+
+// Sidebar
+var sidebar = L.control.sidebar('sidebar', {
+  position: 'right'
+})
+
+map.addControl(sidebar)
+
+// Brownfield Features
+var brownfieldFeatures = brownfield.map(function (point) {
+  return {
+    type: 'Feature',
+    geometry: {
+      type: 'Point',
+      coordinates: [point.longitude, point.latitude]
+    },
+    properties: point
+  }
+})
+
+// Local authority boundaries (England only)
+geoJson = geoJson.features.filter(function (item) {
+  return item.properties.lad19cd.startsWith('E')
+}).map(function (item) {
+  var lad19cd = item.properties.lad19cd
+  if (item.properties.lad19cd === 'E06000057') {
+    // Northumberland
+    lad19cd = 'E06000048'
+  } else if (item.properties.lad19cd === 'E07000240') {
+    // St Albans
+    lad19cd = 'E07000100'
+  } else if (item.properties.lad19cd === 'E07000241') {
+    // Welwyn Hatfield
+    lad19cd = 'E07000104'
+  } else if (item.properties.lad19cd === 'E07000242') {
+    // East Hertfordshire
+    lad19cd = 'E07000097'
+  } else if (item.properties.lad19cd === 'E07000243') {
+    // Stevenage
+    lad19cd = 'E07000101'
+  } else if (item.properties.lad19cd === 'E08000037') {
+    // Gateshead
+    lad19cd = 'E08000020'
+  }
+
+  item.properties.organisation = organisations.find(function (organisation) {
+    if (organisation['statistical-geography'] && organisation['statistical-geography'].length) {
+      return organisation['statistical-geography'].toString().toLowerCase() === lad19cd.toString().toLowerCase()
+    }
+  })
+
+  return item
+})
+
+L.geoJSON(geoJson, {
+  style: {
+    fillOpacity: 0,
+    weight: 2,
+    color: 'gray'
+  },
+  onEachFeature: function (feature, layer) {
+    if(organisations.length === 1) {
+      map.fitBounds(layer.getBounds())
+    }
+
+    if (!feature.properties.organisation) {
+      layer.setStyle({
+        fillColor: 'red',
+        fillOpacity: 0.25
+      })
+    } else {
+      var thisOrganisationsFeatures = brownfieldFeatures.filter(function (brownfieldFeature) {
+        if (brownfieldFeature.properties.organisation.toLowerCase() === feature.properties.organisation.organisation.toLowerCase()) {
+          return true
+        }
+        return false
+      })
+
+      var brownfieldMarkers = L.markerClusterGroup({
+        showCoverageOnHover: false,
+        zoomToBoundsOnClick: false,
+        spiderfyOnMaxZoom: false,
+        removeOutsideVisibleBounds: true,
+        animate: false,
+        disableClusteringAtZoom: 11,
+        maxClusterRadius: 600,
+        singleMarkerMode: false
+      })
+      var brownfieldOnMap = L.geoJSON({
+        type: 'FeatureCollection',
+        features: thisOrganisationsFeatures
+      }, {
+        pointToLayer: function (feature, latlng) {
+          var size = isNaN(feature.properties.hectares) ? 100 : (Math.sqrt((feature.properties.hectares * 10000) / Math.PI))
+          return L.circle(latlng, { color: 'red', fillColor: '#f03', fillOpacity: 0.5, radius: size.toFixed(2) })
+        },
+        onEachFeature: function (feature, layer) {
+          layer.on({
+            click: function () {
+              sidebar.setContent('<h2>Loading...</h2>')
+              sidebar.show()
+
+              return Papa.parse('https://raw.githubusercontent.com/digital-land/map/master/docs/data/brownfield/' + feature.properties.organisation.toLowerCase().replace(':', '-') + '.csv', {
+                download: true,
+                header: true,
+                complete: function (results) {
+                  var point = results.data.find(function (row) {
+                    return (row.latitude === feature.properties.latitude.toString()) && (row.longitude === feature.properties.longitude.toString())
+                  })
+
+                  if (point) {
+                    content = ''
+
+                    Object.keys(point).forEach(function (key) {
+                      content = content + key + ': ' + point[key] + '<br>'
+                    })
+                  } else {
+                    content = '<h2>Point not found - debug info:</h2><pre>' + JSON.stringify(results.data) + '</pre><h3>Looking for a row with latitude, longitude:</h3>' + feature.properties.latitude.toString() + ',' + feature.properties.longitude.toString()
+                  }
+
+                  sidebar.setContent(content)
+                }
+              })
+            }
+          })
+        }
+      })
+
+      brownfieldMarkers.addLayer(brownfieldOnMap)
+      map.addLayer(brownfieldMarkers)
+    }
+
+    layer.on({
+      mouseover: function () {
+        this.setStyle({
+          fillColor: 'black',
+          fillOpacity: 0.25
+        })
+      },
+      mouseout: function () {
+        this.setStyle({
+          fillColor: 'white',
+          fillOpacity: 0
+        })
+      },
+      click: function () {
+        return map.fitBounds(layer.getBounds())
+      }
+    })
+  }
+}).addTo(map)
+</script>

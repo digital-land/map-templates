@@ -1,0 +1,220 @@
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" crossorigin="" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.fullscreen@1.6.0/Control.FullScreen.css" crossorigin="" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet-sidebar@0.2.2/src/L.Control.Sidebar.css" crossorigin="" />
+
+<style>
+  body {
+    margin: 0;
+  }
+
+  #map {
+    width: 960px;
+    height: 640px;
+    transform: translate(-50%,-50%);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+  }
+
+  .leaflet-sidebar {
+    display: none;
+    width: 200px;
+  }
+
+  .leaflet-sidebar.visible {
+    display: block;
+  }
+
+  .leaflet-sidebar .close {
+    z-index: 10000;
+  }
+
+  .leaflet-marker-icon.marker-cluster {
+    line-height: 18px;
+    text-align: center;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    background: #fff;
+    border: 2px solid #222;
+  }
+</style>
+
+<div id="map"></div>
+<div id="sidebar"></div>
+
+<script>
+  var geoJson = []
+  var organisations = [{"organisation":"development-corporation:Q6670544","wikidata":"Q6670544","name":"London Legacy Development Corporation","website":"https://www.queenelizabetholympicpark.co.uk/planning-authority/planning-policy","twitter":"","statistical-geography":"E51000001","toid":"","opendatacommunities":"http://opendatacommunities.org/id/dev-corp/london-legacy","opendatacommunities-area":"","billing-authority":"","census-area":"","local-authority-type":"","esd-inventories":"","start-date":"2012-03-09","end-date":""}]
+  var brownfield = [{"entry-date":"2017-11-30","organisation":"development-corporation:Q6670544","site":"LLDC1","site-address":"PDZ8.1 (Bridgewater Road), and PDZ8.4 (Warton Road).","site-plan-url":"http://www.queenelizabetholympicpark.co.uk/-/media/lldc/planning/brownfield-register/lldc1.ashx?la=en","deliverable":"yes","ownership":"owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"outline planning permission","hazardous-substances":"","latitude":"51.535211","longitude":"-0.00853","hectares":"2.9","minimum-net-dwellings":"300","maximum-net-dwellings":"300","start-date":"2017-11-30","end-date":"","notes":". Part of mixed use development within the Queen Elizabeth Olympic Park, comprising up to 763,500m2 of floorspace in various use classes. Outline permission has been granted for approximately 300 residential units on the part of the site known as PDZ8.1 & 8.4","resource":"40ba241c5f5da1de68d3c025e68210d8707413a4d7c50ce9396a006802556669"},{"entry-date":"2017-11-30","organisation":"development-corporation:Q6670544","site":"LLDC2","site-address":"PDZ12, and adjacent to, Rick Roberts Way","site-plan-url":"http://www.queenelizabetholympicpark.co.uk/-/media/lldc/planning/brownfield-register/lldc2.ashx?la=en","deliverable":"yes","ownership":"mixed ownership","planning-permission-status":"permissioned","planning-permission-type":"outline planning permission","hazardous-substances":"","latitude":"51.534074","longitude":"-0.004719","hectares":"3.34","minimum-net-dwellings":"400","maximum-net-dwellings":"400","start-date":"2017-11-30","end-date":"","notes":". Part of outline permission for mixed use development within the Queen Elizabeth Olympic Park, comprising up to 763,500m2 of floorspace in various use classes.  Outline permission has been granted for approximately 400 residential units, retail and community floorspace on the part of the site known as PDZ12.","resource":"40ba241c5f5da1de68d3c025e68210d8707413a4d7c50ce9396a006802556669"},{"entry-date":"2017-11-30","organisation":"development-corporation:Q6670544","site":"LLDC3","site-address":"Land at Clockhouse and Access House, Imperial Street, Bromley-by-Bow","site-plan-url":"http://www.queenelizabetholympicpark.co.uk/-/media/lldc/planning/brownfield-register/lldc3.ashx?la=en","deliverable":"yes","ownership":"not owned by a public authority","planning-permission-status":"pending decision","planning-permission-type":"","hazardous-substances":"","latitude":"51.525302","longitude":"-0.010568","hectares":"0.99","minimum-net-dwellings":"300","maximum-net-dwellings":"300","start-date":"2017-11-30","end-date":"","notes":". Full planning application for the demolition of the existing buildings on site and the construction of a residential-led mixed use scheme comprising a series of buildings ranging from one to 27 storeys in height to provide 3,570 sq m of flexible community, commercial and retail floorspace (Use Classes A1, A2, A3, A4, B1 and/or D1) at ground and mezzanine floor level, 491 residential units (Use Class C3) on the upper floors, parking/refuse/servicing at basement and ground floor, energy centre, communal amenity areas, and all associated landscaped public open space.","resource":"40ba241c5f5da1de68d3c025e68210d8707413a4d7c50ce9396a006802556669"}]
+</script>
+
+<script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet.fullscreen@1.6.0/Control.FullScreen.js" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet-sidebar@0.2.2/src/L.Control.Sidebar.js" crossorigin=""></script>
+<script src="https://unpkg.com/papaparse@5.1.1/papaparse.min.js" crossorigin=""></script>
+
+<script>
+var map = L.map('map', {
+  preferCanvas: true,
+  fullscreenControl: true
+}).setView([52.561928, -1.464854], 7)
+
+// Tile layers
+L.tileLayer('https://tiles.wmflabs.org/bw-mapnik/{z}/{x}/{y}.png', {
+  id: 'base',
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+}).addTo(map)
+
+// Sidebar
+var sidebar = L.control.sidebar('sidebar', {
+  position: 'right'
+})
+
+map.addControl(sidebar)
+
+// Brownfield Features
+var brownfieldFeatures = brownfield.map(function (point) {
+  return {
+    type: 'Feature',
+    geometry: {
+      type: 'Point',
+      coordinates: [point.longitude, point.latitude]
+    },
+    properties: point
+  }
+})
+
+// Local authority boundaries (England only)
+geoJson = geoJson.features.filter(function (item) {
+  return item.properties.lad19cd.startsWith('E')
+}).map(function (item) {
+  var lad19cd = item.properties.lad19cd
+  if (item.properties.lad19cd === 'E06000057') {
+    // Northumberland
+    lad19cd = 'E06000048'
+  } else if (item.properties.lad19cd === 'E07000240') {
+    // St Albans
+    lad19cd = 'E07000100'
+  } else if (item.properties.lad19cd === 'E07000241') {
+    // Welwyn Hatfield
+    lad19cd = 'E07000104'
+  } else if (item.properties.lad19cd === 'E07000242') {
+    // East Hertfordshire
+    lad19cd = 'E07000097'
+  } else if (item.properties.lad19cd === 'E07000243') {
+    // Stevenage
+    lad19cd = 'E07000101'
+  } else if (item.properties.lad19cd === 'E08000037') {
+    // Gateshead
+    lad19cd = 'E08000020'
+  }
+
+  item.properties.organisation = organisations.find(function (organisation) {
+    if (organisation['statistical-geography'] && organisation['statistical-geography'].length) {
+      return organisation['statistical-geography'].toString().toLowerCase() === lad19cd.toString().toLowerCase()
+    }
+  })
+
+  return item
+})
+
+L.geoJSON(geoJson, {
+  style: {
+    fillOpacity: 0,
+    weight: 2,
+    color: 'gray'
+  },
+  onEachFeature: function (feature, layer) {
+    if(organisations.length === 1) {
+      map.fitBounds(layer.getBounds())
+    }
+
+    if (!feature.properties.organisation) {
+      layer.setStyle({
+        fillColor: 'red',
+        fillOpacity: 0.25
+      })
+    } else {
+      var thisOrganisationsFeatures = brownfieldFeatures.filter(function (brownfieldFeature) {
+        if (brownfieldFeature.properties.organisation.toLowerCase() === feature.properties.organisation.organisation.toLowerCase()) {
+          return true
+        }
+        return false
+      })
+
+      var brownfieldMarkers = L.markerClusterGroup({
+        showCoverageOnHover: false,
+        zoomToBoundsOnClick: false,
+        spiderfyOnMaxZoom: false,
+        removeOutsideVisibleBounds: true,
+        animate: false,
+        disableClusteringAtZoom: 11,
+        maxClusterRadius: 600,
+        singleMarkerMode: false
+      })
+      var brownfieldOnMap = L.geoJSON({
+        type: 'FeatureCollection',
+        features: thisOrganisationsFeatures
+      }, {
+        pointToLayer: function (feature, latlng) {
+          var size = isNaN(feature.properties.hectares) ? 100 : (Math.sqrt((feature.properties.hectares * 10000) / Math.PI))
+          return L.circle(latlng, { color: 'red', fillColor: '#f03', fillOpacity: 0.5, radius: size.toFixed(2) })
+        },
+        onEachFeature: function (feature, layer) {
+          layer.on({
+            click: function () {
+              sidebar.setContent('<h2>Loading...</h2>')
+              sidebar.show()
+
+              return Papa.parse('https://raw.githubusercontent.com/digital-land/map/master/docs/data/brownfield/' + feature.properties.organisation.toLowerCase().replace(':', '-') + '.csv', {
+                download: true,
+                header: true,
+                complete: function (results) {
+                  var point = results.data.find(function (row) {
+                    return (row.latitude === feature.properties.latitude.toString()) && (row.longitude === feature.properties.longitude.toString())
+                  })
+
+                  if (point) {
+                    content = ''
+
+                    Object.keys(point).forEach(function (key) {
+                      content = content + key + ': ' + point[key] + '<br>'
+                    })
+                  } else {
+                    content = '<h2>Point not found - debug info:</h2><pre>' + JSON.stringify(results.data) + '</pre><h3>Looking for a row with latitude, longitude:</h3>' + feature.properties.latitude.toString() + ',' + feature.properties.longitude.toString()
+                  }
+
+                  sidebar.setContent(content)
+                }
+              })
+            }
+          })
+        }
+      })
+
+      brownfieldMarkers.addLayer(brownfieldOnMap)
+      map.addLayer(brownfieldMarkers)
+    }
+
+    layer.on({
+      mouseover: function () {
+        this.setStyle({
+          fillColor: 'black',
+          fillOpacity: 0.25
+        })
+      },
+      mouseout: function () {
+        this.setStyle({
+          fillColor: 'white',
+          fillOpacity: 0
+        })
+      },
+      click: function () {
+        return map.fitBounds(layer.getBounds())
+      }
+    })
+  }
+}).addTo(map)
+</script>

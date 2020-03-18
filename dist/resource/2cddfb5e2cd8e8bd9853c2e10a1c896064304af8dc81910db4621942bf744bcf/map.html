@@ -1,0 +1,220 @@
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" crossorigin="" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.fullscreen@1.6.0/Control.FullScreen.css" crossorigin="" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet-sidebar@0.2.2/src/L.Control.Sidebar.css" crossorigin="" />
+
+<style>
+  body {
+    margin: 0;
+  }
+
+  #map {
+    width: 960px;
+    height: 640px;
+    transform: translate(-50%,-50%);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+  }
+
+  .leaflet-sidebar {
+    display: none;
+    width: 200px;
+  }
+
+  .leaflet-sidebar.visible {
+    display: block;
+  }
+
+  .leaflet-sidebar .close {
+    z-index: 10000;
+  }
+
+  .leaflet-marker-icon.marker-cluster {
+    line-height: 18px;
+    text-align: center;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    background: #fff;
+    border: 2px solid #222;
+  }
+</style>
+
+<div id="map"></div>
+<div id="sidebar"></div>
+
+<script>
+  var geoJson = []
+  var organisations = [{"organisation":"national-park-authority:Q27178932","wikidata":"Q27178932","name":"Yorkshire Dales National Park Authority","website":"https://www.gov.uk/government/organisations/yorkshire-dales-national-park-authority","twitter":"yorkshire_dales","statistical-geography":"E26000008","toid":"","opendatacommunities":"http://opendatacommunities.org/id/national-park-authority/yorkshire-dales","opendatacommunities-area":"http://opendatacommunities.org/id/geography/administration/npark/E26000008","billing-authority":"E6407","census-area":"","local-authority-type":"","esd-inventories":"","start-date":"","end-date":""}]
+  var brownfield = [{"entry-date":"2017-11-13","organisation":"national-park-authority:Q27178932","site":"S/05/2","site-address":"Bronte House, Crookenden House and Garner House, Casterton School, Casterton","site-plan-url":"http://www.yorkshiredales.org.uk/__data/assets/pdf_file/0008/977309/Casterton.pdf","deliverable":"yes","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"54.21189","longitude":"-2.57899","hectares":"0.67","minimum-net-dwellings":"17","maximum-net-dwellings":"17","start-date":"2017-11-13","end-date":"","notes":". Conversion - 17 units - open market - affordable housing sum payable","resource":"2cddfb5e2cd8e8bd9853c2e10a1c896064304af8dc81910db4621942bf744bcf"},{"entry-date":"2017-11-13","organisation":"national-park-authority:Q27178932","site":"R/31/23F","site-address":"The Stables, Marske","site-plan-url":"http://www.yorkshiredales.org.uk/__data/assets/pdf_file/0006/977316/Stables-Marske.pdf","deliverable":"yes","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"54.39813","longitude":"-1.84286","hectares":"0.3","minimum-net-dwellings":"9","maximum-net-dwellings":"9","start-date":"2017-11-13","end-date":"","notes":". Conversion - 9 units - local occupancy or holiday letting restricted","resource":"2cddfb5e2cd8e8bd9853c2e10a1c896064304af8dc81910db4621942bf744bcf"},{"entry-date":"2017-11-13","organisation":"national-park-authority:Q27178932","site":"C/04/41G","site-address":"Town Head Garage, Town Head Lane, Austwick","site-plan-url":"http://www.yorkshiredales.org.uk/__data/assets/pdf_file/0007/977317/Townhead-Austwick.pdf","deliverable":"yes","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"54.11445","longitude":"-2.35448","hectares":"0.15","minimum-net-dwellings":"5","maximum-net-dwellings":"5","start-date":"2017-11-13","end-date":"","notes":". New build - 5 units - local occupancy restriction","resource":"2cddfb5e2cd8e8bd9853c2e10a1c896064304af8dc81910db4621942bf744bcf"},{"entry-date":"2017-11-13","organisation":"national-park-authority:Q27178932","site":"C/52/56C","site-address":"Green Gates, Long Preston","site-plan-url":"http://www.yorkshiredales.org.uk/__data/assets/pdf_file/0010/977311/Greengate-Long-P.pdf","deliverable":"yes","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"54.02097","longitude":"-2.25404","hectares":"0.31","minimum-net-dwellings":"13","maximum-net-dwellings":"13","start-date":"2017-11-13","end-date":"","notes":". New build - 13 units - 6 affordable with local occupancy restriction - 7 open market","resource":"2cddfb5e2cd8e8bd9853c2e10a1c896064304af8dc81910db4621942bf744bcf"},{"entry-date":"2017-11-13","organisation":"national-park-authority:Q27178932","site":"S/03/606","site-address":"Kings Yard, Bainbridge Road, Sedbergh","site-plan-url":"http://www.yorkshiredales.org.uk/__data/assets/pdf_file/0011/977312/Kings-Yard-Sedbergh.pdf","deliverable":"yes","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"54.32418","longitude":"-2.52824","hectares":"0.14","minimum-net-dwellings":"5","maximum-net-dwellings":"5","start-date":"2017-11-13","end-date":"","notes":". New build - 5 units - local occupancy restriction","resource":"2cddfb5e2cd8e8bd9853c2e10a1c896064304af8dc81910db4621942bf744bcf"},{"entry-date":"2017-11-13","organisation":"national-park-authority:Q27178932","site":"S/03/148D","site-address":"37-39 Main Street, Sedbergh","site-plan-url":"http://www.yorkshiredales.org.uk/__data/assets/pdf_file/0003/977313/Main-St-Sedbergh.pdf","deliverable":"yes","ownership":"not owned by a public authority","planning-permission-status":"not permissioned","planning-permission-type":"","hazardous-substances":"","latitude":"54.32347","longitude":"-2.52767","hectares":"0.05","minimum-net-dwellings":"4","maximum-net-dwellings":"4","start-date":"2017-11-13","end-date":"","notes":"","resource":"2cddfb5e2cd8e8bd9853c2e10a1c896064304af8dc81910db4621942bf744bcf"},{"entry-date":"2017-11-13","organisation":"national-park-authority:Q27178932","site":"211","site-address":"East of Park Lea, Reeth","site-plan-url":"http://www.yorkshiredales.org.uk/__data/assets/pdf_file/0005/977315/Park-Lea-Reeth.pdf","deliverable":"","ownership":"not owned by a public authority","planning-permission-status":"not permissioned","planning-permission-type":"","hazardous-substances":"","latitude":"54.38788","longitude":"-1.94089","hectares":"0.21","minimum-net-dwellings":"10","maximum-net-dwellings":"10","start-date":"2017-11-13","end-date":"","notes":"","resource":"2cddfb5e2cd8e8bd9853c2e10a1c896064304af8dc81910db4621942bf744bcf"}]
+</script>
+
+<script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet.fullscreen@1.6.0/Control.FullScreen.js" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet-sidebar@0.2.2/src/L.Control.Sidebar.js" crossorigin=""></script>
+<script src="https://unpkg.com/papaparse@5.1.1/papaparse.min.js" crossorigin=""></script>
+
+<script>
+var map = L.map('map', {
+  preferCanvas: true,
+  fullscreenControl: true
+}).setView([52.561928, -1.464854], 7)
+
+// Tile layers
+L.tileLayer('https://tiles.wmflabs.org/bw-mapnik/{z}/{x}/{y}.png', {
+  id: 'base',
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+}).addTo(map)
+
+// Sidebar
+var sidebar = L.control.sidebar('sidebar', {
+  position: 'right'
+})
+
+map.addControl(sidebar)
+
+// Brownfield Features
+var brownfieldFeatures = brownfield.map(function (point) {
+  return {
+    type: 'Feature',
+    geometry: {
+      type: 'Point',
+      coordinates: [point.longitude, point.latitude]
+    },
+    properties: point
+  }
+})
+
+// Local authority boundaries (England only)
+geoJson = geoJson.features.filter(function (item) {
+  return item.properties.lad19cd.startsWith('E')
+}).map(function (item) {
+  var lad19cd = item.properties.lad19cd
+  if (item.properties.lad19cd === 'E06000057') {
+    // Northumberland
+    lad19cd = 'E06000048'
+  } else if (item.properties.lad19cd === 'E07000240') {
+    // St Albans
+    lad19cd = 'E07000100'
+  } else if (item.properties.lad19cd === 'E07000241') {
+    // Welwyn Hatfield
+    lad19cd = 'E07000104'
+  } else if (item.properties.lad19cd === 'E07000242') {
+    // East Hertfordshire
+    lad19cd = 'E07000097'
+  } else if (item.properties.lad19cd === 'E07000243') {
+    // Stevenage
+    lad19cd = 'E07000101'
+  } else if (item.properties.lad19cd === 'E08000037') {
+    // Gateshead
+    lad19cd = 'E08000020'
+  }
+
+  item.properties.organisation = organisations.find(function (organisation) {
+    if (organisation['statistical-geography'] && organisation['statistical-geography'].length) {
+      return organisation['statistical-geography'].toString().toLowerCase() === lad19cd.toString().toLowerCase()
+    }
+  })
+
+  return item
+})
+
+L.geoJSON(geoJson, {
+  style: {
+    fillOpacity: 0,
+    weight: 2,
+    color: 'gray'
+  },
+  onEachFeature: function (feature, layer) {
+    if(organisations.length === 1) {
+      map.fitBounds(layer.getBounds())
+    }
+
+    if (!feature.properties.organisation) {
+      layer.setStyle({
+        fillColor: 'red',
+        fillOpacity: 0.25
+      })
+    } else {
+      var thisOrganisationsFeatures = brownfieldFeatures.filter(function (brownfieldFeature) {
+        if (brownfieldFeature.properties.organisation.toLowerCase() === feature.properties.organisation.organisation.toLowerCase()) {
+          return true
+        }
+        return false
+      })
+
+      var brownfieldMarkers = L.markerClusterGroup({
+        showCoverageOnHover: false,
+        zoomToBoundsOnClick: false,
+        spiderfyOnMaxZoom: false,
+        removeOutsideVisibleBounds: true,
+        animate: false,
+        disableClusteringAtZoom: 11,
+        maxClusterRadius: 600,
+        singleMarkerMode: false
+      })
+      var brownfieldOnMap = L.geoJSON({
+        type: 'FeatureCollection',
+        features: thisOrganisationsFeatures
+      }, {
+        pointToLayer: function (feature, latlng) {
+          var size = isNaN(feature.properties.hectares) ? 100 : (Math.sqrt((feature.properties.hectares * 10000) / Math.PI))
+          return L.circle(latlng, { color: 'red', fillColor: '#f03', fillOpacity: 0.5, radius: size.toFixed(2) })
+        },
+        onEachFeature: function (feature, layer) {
+          layer.on({
+            click: function () {
+              sidebar.setContent('<h2>Loading...</h2>')
+              sidebar.show()
+
+              return Papa.parse('https://raw.githubusercontent.com/digital-land/map/master/docs/data/brownfield/' + feature.properties.organisation.toLowerCase().replace(':', '-') + '.csv', {
+                download: true,
+                header: true,
+                complete: function (results) {
+                  var point = results.data.find(function (row) {
+                    return (row.latitude === feature.properties.latitude.toString()) && (row.longitude === feature.properties.longitude.toString())
+                  })
+
+                  if (point) {
+                    content = ''
+
+                    Object.keys(point).forEach(function (key) {
+                      content = content + key + ': ' + point[key] + '<br>'
+                    })
+                  } else {
+                    content = '<h2>Point not found - debug info:</h2><pre>' + JSON.stringify(results.data) + '</pre><h3>Looking for a row with latitude, longitude:</h3>' + feature.properties.latitude.toString() + ',' + feature.properties.longitude.toString()
+                  }
+
+                  sidebar.setContent(content)
+                }
+              })
+            }
+          })
+        }
+      })
+
+      brownfieldMarkers.addLayer(brownfieldOnMap)
+      map.addLayer(brownfieldMarkers)
+    }
+
+    layer.on({
+      mouseover: function () {
+        this.setStyle({
+          fillColor: 'black',
+          fillOpacity: 0.25
+        })
+      },
+      mouseout: function () {
+        this.setStyle({
+          fillColor: 'white',
+          fillOpacity: 0
+        })
+      },
+      click: function () {
+        return map.fitBounds(layer.getBounds())
+      }
+    })
+  }
+}).addTo(map)
+</script>

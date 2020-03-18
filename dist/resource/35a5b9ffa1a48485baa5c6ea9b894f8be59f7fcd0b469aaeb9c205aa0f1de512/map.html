@@ -1,0 +1,220 @@
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" crossorigin="" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.fullscreen@1.6.0/Control.FullScreen.css" crossorigin="" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet-sidebar@0.2.2/src/L.Control.Sidebar.css" crossorigin="" />
+
+<style>
+  body {
+    margin: 0;
+  }
+
+  #map {
+    width: 960px;
+    height: 640px;
+    transform: translate(-50%,-50%);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+  }
+
+  .leaflet-sidebar {
+    display: none;
+    width: 200px;
+  }
+
+  .leaflet-sidebar.visible {
+    display: block;
+  }
+
+  .leaflet-sidebar .close {
+    z-index: 10000;
+  }
+
+  .leaflet-marker-icon.marker-cluster {
+    line-height: 18px;
+    text-align: center;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    background: #fff;
+    border: 2px solid #222;
+  }
+</style>
+
+<div id="map"></div>
+<div id="sidebar"></div>
+
+<script>
+  var geoJson = []
+  var organisations = [{"organisation":"national-park-authority:Q72617158","wikidata":"Q72617158","name":"New Forest National Park Authority","website":"https://www.gov.uk/government/organisations/new-forest-national-park-authority","twitter":"","statistical-geography":"E26000009","toid":"","opendatacommunities":"http://opendatacommunities.org/id/national-park-authority/new-forest","opendatacommunities-area":"http://opendatacommunities.org/id/geography/administration/npark/E26000009","billing-authority":"E6409","census-area":"","local-authority-type":"","esd-inventories":"","start-date":"","end-date":""}]
+  var brownfield = [{"entry-date":"2019-12-11","organisation":"national-park-authority:Q72617158","site":"BFS1","site-address":"Former Magistrates’ Court, Pikes Hill, Lyndhurst, SO43 7AY","site-plan-url":"https://www.newforestnpa.gov.uk/planning/brownfield-sites-register/","deliverable":"yes","ownership":"owned by a public authority","planning-permission-status":"not permissioned","planning-permission-type":"","hazardous-substances":"","latitude":"50.877638","longitude":"-1.57827","hectares":"0.04","minimum-net-dwellings":"5","maximum-net-dwellings":"5","start-date":"2017-12-20","end-date":"","notes":"\"An element of residential use would be considered alongside employment as part of a mixed use redevelopment of this employment site\"","resource":"35a5b9ffa1a48485baa5c6ea9b894f8be59f7fcd0b469aaeb9c205aa0f1de512"},{"entry-date":"2019-12-11","organisation":"national-park-authority:Q72617158","site":"BFS2","site-address":"Garage Site, Foldsgate Close, Lyndhurst SO43 7BY","site-plan-url":"https://www.newforestnpa.gov.uk/planning/brownfield-sites-register/","deliverable":"yes","ownership":"owned by a public authority","planning-permission-status":"not permissioned","planning-permission-type":"","hazardous-substances":"","latitude":"50.877882","longitude":"-1.578666","hectares":"0.02","minimum-net-dwellings":"2","maximum-net-dwellings":"2","start-date":"2017-12-20","end-date":"","notes":"","resource":"35a5b9ffa1a48485baa5c6ea9b894f8be59f7fcd0b469aaeb9c205aa0f1de512"},{"entry-date":"2019-12-11","organisation":"national-park-authority:Q72617158","site":"BFS3","site-address":"Redmayne Engineering Site, Station Approach, Brockenhurst, SO42 7TW","site-plan-url":"https://www.newforestnpa.gov.uk/planning/brownfield-sites-register/","deliverable":"yes","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"50.81754","longitude":"-1.57353","hectares":"0.39","minimum-net-dwellings":"9","maximum-net-dwellings":"9","start-date":"2017-12-20","end-date":"","notes":"\"Demolition of redundant industrial buildings and construction of mixed use development including 9no dwellings, 4no office/retail units on ground floor and 5 no office units at first floor level, carports, parking and landscaping. Existing access retained.\"","resource":"35a5b9ffa1a48485baa5c6ea9b894f8be59f7fcd0b469aaeb9c205aa0f1de512"},{"entry-date":"2019-12-11","organisation":"national-park-authority:Q72617158","site":"BFS4","site-address":"Land at Railway Station, Brockenhurst, SO42 7TW","site-plan-url":"https://www.newforestnpa.gov.uk/planning/brownfield-sites-register/","deliverable":"yes","ownership":"","planning-permission-status":"not permissioned","planning-permission-type":"","hazardous-substances":"","latitude":"50.814319","longitude":"-1.575547","hectares":"0.35","minimum-net-dwellings":"10","maximum-net-dwellings":"10","start-date":"2017-12-20","end-date":"","notes":"","resource":"35a5b9ffa1a48485baa5c6ea9b894f8be59f7fcd0b469aaeb9c205aa0f1de512"},{"entry-date":"2019-12-11","organisation":"national-park-authority:Q72617158","site":"BFS5","site-address":"Former Service Station, 128 Lyndhurst Road, Ashurst, SO40 7AS","site-plan-url":"https://www.newforestnpa.gov.uk/planning/brownfield-sites-register/","deliverable":"yes","ownership":"not owned by a public authority","planning-permission-status":"not permissioned","planning-permission-type":"","hazardous-substances":"","latitude":"50.892675","longitude":"-1.522698","hectares":"0.05","minimum-net-dwellings":"2","maximum-net-dwellings":"2","start-date":"2017-12-20","end-date":"","notes":"","resource":"35a5b9ffa1a48485baa5c6ea9b894f8be59f7fcd0b469aaeb9c205aa0f1de512"},{"entry-date":"2019-12-11","organisation":"national-park-authority:Q72617158","site":"BFS6","site-address":"Land adjoining Cranleigh Paddock Residential Home, Calpe Avenue, Lyndhurst, SO43 7EP","site-plan-url":"https://www.newforestnpa.gov.uk/planning/brownfield-sites-register/","deliverable":"yes","ownership":"not owned by a public authority","planning-permission-status":"not permissioned","planning-permission-type":"","hazardous-substances":"","latitude":"50.875707","longitude":"-1.579084","hectares":"0.35","minimum-net-dwellings":"18","maximum-net-dwellings":"18","start-date":"2017-12-20","end-date":"","notes":"","resource":"35a5b9ffa1a48485baa5c6ea9b894f8be59f7fcd0b469aaeb9c205aa0f1de512"},{"entry-date":"2019-12-11","organisation":"national-park-authority:Q72617158","site":"BFS7","site-address":"Lyndhurst Park Hotel, 78 High Street, Lyndhurst, SO43 7NL","site-plan-url":"https://www.newforestnpa.gov.uk/planning/brownfield-sites-register/","deliverable":"yes","ownership":"not owned by a public authority","planning-permission-status":"not permissioned","planning-permission-type":"","hazardous-substances":"","latitude":"50.87204","longitude":"-1.572011","hectares":"1.61","minimum-net-dwellings":"50","maximum-net-dwellings":"50","start-date":"2017-12-20","end-date":"","notes":"\"allocated in adopted local plan\"","resource":"35a5b9ffa1a48485baa5c6ea9b894f8be59f7fcd0b469aaeb9c205aa0f1de512"},{"entry-date":"2019-12-11","organisation":"national-park-authority:Q72617158","site":"BFS8","site-address":"Oak Lodge Dental Surgery, Rhinefield Road, Brockenhurst, SO42 7SR","site-plan-url":"https://www.newforestnpa.gov.uk/planning/brownfield-sites-register/","deliverable":"yes","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"50.82238","longitude":"-1.581436","hectares":"0.15","minimum-net-dwellings":"1","maximum-net-dwellings":"1","start-date":"2017-12-20","end-date":"","notes":"\"Planning application partly implemented; demolition of existing, new access\"","resource":"35a5b9ffa1a48485baa5c6ea9b894f8be59f7fcd0b469aaeb9c205aa0f1de512"},{"entry-date":"2019-12-11","organisation":"national-park-authority:Q72617158","site":"BFS9","site-address":"Watersplash Hotel, The Rise, Brockenhurst, SO42 7ZP","site-plan-url":"https://www.newforestnpa.gov.uk/planning/brownfield-sites-register/","deliverable":"yes","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"50.818753","longitude":"-1.578147","hectares":"0.5","minimum-net-dwellings":"26","maximum-net-dwellings":"26","start-date":"2017-12-20","end-date":"2019-03-31","notes":"\"3 villas to create 24 age restricted apartments; construction commenced 2018\"","resource":"35a5b9ffa1a48485baa5c6ea9b894f8be59f7fcd0b469aaeb9c205aa0f1de512"},{"entry-date":"2019-12-11","organisation":"national-park-authority:Q72617158","site":"BFS10","site-address":"First and Second Floor, 49-49A High Street, Lyndhurst, SO43 7BE","site-plan-url":"https://www.newforestnpa.gov.uk/planning/brownfield-sites-register/","deliverable":"yes","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"other","hazardous-substances":"","latitude":"50.872708","longitude":"-1.575217","hectares":"0.03","minimum-net-dwellings":"6","maximum-net-dwellings":"6","start-date":"2017-12-20","end-date":"2019-03-31","notes":"\"Change of use of office building to 6 apartments\"","resource":"35a5b9ffa1a48485baa5c6ea9b894f8be59f7fcd0b469aaeb9c205aa0f1de512"},{"entry-date":"2019-12-11","organisation":"national-park-authority:Q72617158","site":"BFS12","site-address":"Land To The Rear Of 35 High Street, Lyndhurst, SO43 7BE","site-plan-url":"https://www.newforestnpa.gov.uk/planning/brownfield-sites-register/","deliverable":"yes","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"50.872826","longitude":"-1.575727","hectares":"0.02","minimum-net-dwellings":"1","maximum-net-dwellings":"1","start-date":"2017-12-20","end-date":"","notes":"\"New dwelling; associated landscaping; not started as at 31/3/19\"","resource":"35a5b9ffa1a48485baa5c6ea9b894f8be59f7fcd0b469aaeb9c205aa0f1de512"},{"entry-date":"2019-12-11","organisation":"national-park-authority:Q72617158","site":"BFS13","site-address":"Burwood Lodge, 27 Romsey Road, Lyndhurst, SO43 7AA","site-plan-url":"https://www.newforestnpa.gov.uk/planning/brownfield-sites-register/","deliverable":"yes","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"50.874053","longitude":"-1.576711","hectares":"0.19","minimum-net-dwellings":"1","maximum-net-dwellings":"1","start-date":"2017-12-20","end-date":"","notes":"\"Conversion of Bed and Breakfast to create 2 dwellings; under construction as at 31/3/2019\"","resource":"35a5b9ffa1a48485baa5c6ea9b894f8be59f7fcd0b469aaeb9c205aa0f1de512"},{"entry-date":"2019-12-11","organisation":"national-park-authority:Q72617158","site":"BFS14","site-address":"Land Of Forest Park Hotel, Forest Park Road, Brockenhurst, SO42 7SW","site-plan-url":"https://www.newforestnpa.gov.uk/planning/brownfield-sites-register/","deliverable":"yes","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"50.822441","longitude":"-1.585894","hectares":"0.39","minimum-net-dwellings":"1","maximum-net-dwellings":"1","start-date":"2017-12-20","end-date":"","notes":"\"New dwelling and garage\"","resource":"35a5b9ffa1a48485baa5c6ea9b894f8be59f7fcd0b469aaeb9c205aa0f1de512"},{"entry-date":"2019-12-11","organisation":"national-park-authority:Q72617158","site":"BFS16","site-address":"Lloyds Tsb, Sway Road, Brockenhurst, SO42 7ZH","site-plan-url":"https://www.newforestnpa.gov.uk/planning/brownfield-sites-register/","deliverable":"yes","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"50.818959","longitude":"-1.575505","hectares":"0.06","minimum-net-dwellings":"2","maximum-net-dwellings":"2","start-date":"2017-12-20","end-date":"","notes":"\"Change of use to dental practice; 2 flats; Internal alterations\"","resource":"35a5b9ffa1a48485baa5c6ea9b894f8be59f7fcd0b469aaeb9c205aa0f1de512"},{"entry-date":"2019-12-11","organisation":"national-park-authority:Q72617158","site":"BFS17","site-address":"Rufus House Hotel, Southampton Road, Lyndhurst, SO43 7BQ","site-plan-url":"https://www.newforestnpa.gov.uk/planning/brownfield-sites-register/","deliverable":"yes","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"50.873599","longitude":"-1.573245","hectares":"0.14","minimum-net-dwellings":"2","maximum-net-dwellings":"2","start-date":"2017-12-20","end-date":"","notes":"\"Conversion of owners accommodation to create 2 separate units of accommodation; not started as at 31/3/19\"","resource":"35a5b9ffa1a48485baa5c6ea9b894f8be59f7fcd0b469aaeb9c205aa0f1de512"},{"entry-date":"2019-12-11","organisation":"national-park-authority:Q72617158","site":"BFS18","site-address":"3No. Flats, 68 High Street, Lyndhurst, SO43 7BJ","site-plan-url":"https://www.newforestnpa.gov.uk/planning/brownfield-sites-register/","deliverable":"yes","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"50.872262","longitude":"-1.573245","hectares":"0.18","minimum-net-dwellings":"2","maximum-net-dwellings":"2","start-date":"2018-12-06","end-date":"","notes":"\"Conversion of flat, including loft space, to create 3No. Flats; 3 dwellings under construction as at 31/3/2019\"","resource":"35a5b9ffa1a48485baa5c6ea9b894f8be59f7fcd0b469aaeb9c205aa0f1de512"},{"entry-date":"2019-12-02","organisation":"national-park-authority:Q72617158","site":"BFS19","site-address":"17 Forest Gardens, Lyndhurst, SO43 7AF","site-plan-url":"https://www.newforestnpa.gov.uk/planning/brownfield-sites-register/","deliverable":"yes","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"50.875149","longitude":"-1.578861","hectares":"0.1","minimum-net-dwellings":"1","maximum-net-dwellings":"1","start-date":"2019-12-02","end-date":"","notes":"\"Conversion from outbuilding to 1 dwelling\"","resource":"35a5b9ffa1a48485baa5c6ea9b894f8be59f7fcd0b469aaeb9c205aa0f1de512"},{"entry-date":"2019-12-02","organisation":"national-park-authority:Q72617158","site":"BFS20","site-address":"Care home, Empress Rd, Lyndhurst, SO43 7AE","site-plan-url":"https://www.newforestnpa.gov.uk/planning/brownfield-sites-register/","deliverable":"yes","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"50.874201","longitude":"-1.575274","hectares":"0.05","minimum-net-dwellings":"4","maximum-net-dwellings":"4","start-date":"2019-12-02","end-date":"","notes":"\"Conversion to 4 flats\"","resource":"35a5b9ffa1a48485baa5c6ea9b894f8be59f7fcd0b469aaeb9c205aa0f1de512"},{"entry-date":"2019-12-02","organisation":"national-park-authority:Q72617158","site":"BFS21","site-address":"The Barn, Cadnam, SO40 2NP","site-plan-url":"https://www.newforestnpa.gov.uk/planning/brownfield-sites-register/","deliverable":"yes","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"50.922219","longitude":"-1.58239","hectares":"0.08","minimum-net-dwellings":"1","maximum-net-dwellings":"1","start-date":"2019-12-02","end-date":"","notes":"\"Conversion from office to 1 dwelling\"","resource":"35a5b9ffa1a48485baa5c6ea9b894f8be59f7fcd0b469aaeb9c205aa0f1de512"},{"entry-date":"2019-12-02","organisation":"national-park-authority:Q72617158","site":"BFS22","site-address":"Tatchbury Manor, Winsor, SO40 2HA","site-plan-url":"https://www.newforestnpa.gov.uk/planning/brownfield-sites-register/","deliverable":"yes","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"50.925188","longitude":"-1.535184","hectares":"1.54","minimum-net-dwellings":"10","maximum-net-dwellings":"10","start-date":"2019-12-02","end-date":"","notes":"\"Conversion of care home to 10 dwellings\"","resource":"35a5b9ffa1a48485baa5c6ea9b894f8be59f7fcd0b469aaeb9c205aa0f1de512"},{"entry-date":"2019-12-02","organisation":"national-park-authority:Q72617158","site":"BFS23","site-address":"66 & 68 Brookley Rd, Brockenhurst, SO42 7RA","site-plan-url":"https://www.newforestnpa.gov.uk/planning/brownfield-sites-register/","deliverable":"yes","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"50.819327","longitude":"-1.577773","hectares":"0.02","minimum-net-dwellings":"1","maximum-net-dwellings":"1","start-date":"2019-12-02","end-date":"","notes":"\"1 new dwelling\"","resource":"35a5b9ffa1a48485baa5c6ea9b894f8be59f7fcd0b469aaeb9c205aa0f1de512"},{"entry-date":"2019-12-02","organisation":"national-park-authority:Q72617158","site":"BFS24","site-address":"Builders Yard, Sway, SO41 6BA","site-plan-url":"https://www.newforestnpa.gov.uk/planning/brownfield-sites-register/","deliverable":"yes","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"50.784564","longitude":"-1.606953","hectares":"0.11","minimum-net-dwellings":"3","maximum-net-dwellings":"3","start-date":"2019-12-02","end-date":"","notes":"\"3 new dwellings\"","resource":"35a5b9ffa1a48485baa5c6ea9b894f8be59f7fcd0b469aaeb9c205aa0f1de512"},{"entry-date":"2019-12-02","organisation":"national-park-authority:Q72617158","site":"BFS25","site-address":"Hazlehurst Farm, Sway, SO41 6DN","site-plan-url":"https://www.newforestnpa.gov.uk/planning/brownfield-sites-register/","deliverable":"yes","ownership":"not owned by a public authority","planning-permission-status":"permissioned","planning-permission-type":"full planning permission","hazardous-substances":"","latitude":"50.769584","longitude":"-1.59684","hectares":"0.07","minimum-net-dwellings":"2","maximum-net-dwellings":"2","start-date":"2019-12-02","end-date":"","notes":"\"Conversion from office to 2 new dwellings\"","resource":"35a5b9ffa1a48485baa5c6ea9b894f8be59f7fcd0b469aaeb9c205aa0f1de512"},{"entry-date":"2019-12-02","organisation":"national-park-authority:Q72617158","site":"BFS26","site-address":"Ashurst Hospital, Lyndhurst Road, Ashurst, SO40 7AR","site-plan-url":"https://www.newforestnpa.gov.uk/planning/brownfield-sites-register/","deliverable":"yes","ownership":"not owned by a public authority","planning-permission-status":"not permissioned","planning-permission-type":"","hazardous-substances":"","latitude":"50.891031","longitude":"-1.523184","hectares":"2.82","minimum-net-dwellings":"30","maximum-net-dwellings":"30","start-date":"2019-12-02","end-date":"","notes":"\"allocated in adopted local plan\"","resource":"35a5b9ffa1a48485baa5c6ea9b894f8be59f7fcd0b469aaeb9c205aa0f1de512"}]
+</script>
+
+<script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet.fullscreen@1.6.0/Control.FullScreen.js" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet-sidebar@0.2.2/src/L.Control.Sidebar.js" crossorigin=""></script>
+<script src="https://unpkg.com/papaparse@5.1.1/papaparse.min.js" crossorigin=""></script>
+
+<script>
+var map = L.map('map', {
+  preferCanvas: true,
+  fullscreenControl: true
+}).setView([52.561928, -1.464854], 7)
+
+// Tile layers
+L.tileLayer('https://tiles.wmflabs.org/bw-mapnik/{z}/{x}/{y}.png', {
+  id: 'base',
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+}).addTo(map)
+
+// Sidebar
+var sidebar = L.control.sidebar('sidebar', {
+  position: 'right'
+})
+
+map.addControl(sidebar)
+
+// Brownfield Features
+var brownfieldFeatures = brownfield.map(function (point) {
+  return {
+    type: 'Feature',
+    geometry: {
+      type: 'Point',
+      coordinates: [point.longitude, point.latitude]
+    },
+    properties: point
+  }
+})
+
+// Local authority boundaries (England only)
+geoJson = geoJson.features.filter(function (item) {
+  return item.properties.lad19cd.startsWith('E')
+}).map(function (item) {
+  var lad19cd = item.properties.lad19cd
+  if (item.properties.lad19cd === 'E06000057') {
+    // Northumberland
+    lad19cd = 'E06000048'
+  } else if (item.properties.lad19cd === 'E07000240') {
+    // St Albans
+    lad19cd = 'E07000100'
+  } else if (item.properties.lad19cd === 'E07000241') {
+    // Welwyn Hatfield
+    lad19cd = 'E07000104'
+  } else if (item.properties.lad19cd === 'E07000242') {
+    // East Hertfordshire
+    lad19cd = 'E07000097'
+  } else if (item.properties.lad19cd === 'E07000243') {
+    // Stevenage
+    lad19cd = 'E07000101'
+  } else if (item.properties.lad19cd === 'E08000037') {
+    // Gateshead
+    lad19cd = 'E08000020'
+  }
+
+  item.properties.organisation = organisations.find(function (organisation) {
+    if (organisation['statistical-geography'] && organisation['statistical-geography'].length) {
+      return organisation['statistical-geography'].toString().toLowerCase() === lad19cd.toString().toLowerCase()
+    }
+  })
+
+  return item
+})
+
+L.geoJSON(geoJson, {
+  style: {
+    fillOpacity: 0,
+    weight: 2,
+    color: 'gray'
+  },
+  onEachFeature: function (feature, layer) {
+    if(organisations.length === 1) {
+      map.fitBounds(layer.getBounds())
+    }
+
+    if (!feature.properties.organisation) {
+      layer.setStyle({
+        fillColor: 'red',
+        fillOpacity: 0.25
+      })
+    } else {
+      var thisOrganisationsFeatures = brownfieldFeatures.filter(function (brownfieldFeature) {
+        if (brownfieldFeature.properties.organisation.toLowerCase() === feature.properties.organisation.organisation.toLowerCase()) {
+          return true
+        }
+        return false
+      })
+
+      var brownfieldMarkers = L.markerClusterGroup({
+        showCoverageOnHover: false,
+        zoomToBoundsOnClick: false,
+        spiderfyOnMaxZoom: false,
+        removeOutsideVisibleBounds: true,
+        animate: false,
+        disableClusteringAtZoom: 11,
+        maxClusterRadius: 600,
+        singleMarkerMode: false
+      })
+      var brownfieldOnMap = L.geoJSON({
+        type: 'FeatureCollection',
+        features: thisOrganisationsFeatures
+      }, {
+        pointToLayer: function (feature, latlng) {
+          var size = isNaN(feature.properties.hectares) ? 100 : (Math.sqrt((feature.properties.hectares * 10000) / Math.PI))
+          return L.circle(latlng, { color: 'red', fillColor: '#f03', fillOpacity: 0.5, radius: size.toFixed(2) })
+        },
+        onEachFeature: function (feature, layer) {
+          layer.on({
+            click: function () {
+              sidebar.setContent('<h2>Loading...</h2>')
+              sidebar.show()
+
+              return Papa.parse('https://raw.githubusercontent.com/digital-land/map/master/docs/data/brownfield/' + feature.properties.organisation.toLowerCase().replace(':', '-') + '.csv', {
+                download: true,
+                header: true,
+                complete: function (results) {
+                  var point = results.data.find(function (row) {
+                    return (row.latitude === feature.properties.latitude.toString()) && (row.longitude === feature.properties.longitude.toString())
+                  })
+
+                  if (point) {
+                    content = ''
+
+                    Object.keys(point).forEach(function (key) {
+                      content = content + key + ': ' + point[key] + '<br>'
+                    })
+                  } else {
+                    content = '<h2>Point not found - debug info:</h2><pre>' + JSON.stringify(results.data) + '</pre><h3>Looking for a row with latitude, longitude:</h3>' + feature.properties.latitude.toString() + ',' + feature.properties.longitude.toString()
+                  }
+
+                  sidebar.setContent(content)
+                }
+              })
+            }
+          })
+        }
+      })
+
+      brownfieldMarkers.addLayer(brownfieldOnMap)
+      map.addLayer(brownfieldMarkers)
+    }
+
+    layer.on({
+      mouseover: function () {
+        this.setStyle({
+          fillColor: 'black',
+          fillOpacity: 0.25
+        })
+      },
+      mouseout: function () {
+        this.setStyle({
+          fillColor: 'white',
+          fillOpacity: 0
+        })
+      },
+      click: function () {
+        return map.fitBounds(layer.getBounds())
+      }
+    })
+  }
+}).addTo(map)
+</script>
