@@ -1,138 +1,107 @@
 const fs = require('fs')
 const csv = require('csvtojson')
 const nunjucks = require('nunjucks')
+const path = require('path')
+
+const baseFile = 'src/base.njk'
+const urlPrefix = process.env.IS_PROD ? 'https://digital-land.github.io/map-templates' : ''
 
 const actions = {
-  async generateByDataset () {
-    const organisations = await csv().fromFile(__dirname + '/organisation-collection/collection/organisation.csv')
-    const brownfields = await csv().fromFile(__dirname + '/brownfield-land-collection/index/dataset.csv')
-
-    const boundariesJson = fs.readFileSync(__dirname + '/boundaries-collection/collection/local-authority/generalised.geojson', 'utf8')
-    const brownfieldJson = brownfields.map(function (row) {
-      return {
-        organisation: row.organisation,
-        latitude: row.latitude,
-        longitude: row.longitude,
-        hectares: row.hectares,
-        'end-date': row['end-date']
-      }
-    })
-
-    const directory = __dirname + '/docs/dataset/brownfield-land'
-    fs.writeFileSync(directory + '/map.html', nunjucks.render('src/base.njk', {
+  async generateByDataset (organisations, brownfields, boundaries) {
+    const renderedDir = path.join(__dirname, '/docs/dataset/brownfield-land')
+    const renderedPath = path.join(renderedDir, 'map.html')
+    const renderedFile = nunjucks.render(baseFile, {
       data: {
-        urlPrefix: process.env.IS_PROD ? 'https://digital-land.github.io/map-templates' : '',
-        geojson: JSON.parse(boundariesJson),
+        urlPrefix: urlPrefix,
+        geojson: boundaries,
         organisations: organisations,
-        brownfield: brownfieldJson
+        brownfield: brownfields.map(row => ({
+          organisation: row.organisation,
+          latitude: row.latitude,
+          longitude: row.longitude,
+          hectares: row.hectares,
+          'end-date': row['end-date']
+        }))
       }
-    }))
+    })
+
+    fs.mkdirSync(renderedDir, { recursive: true })
+    return fs.writeFileSync(renderedPath, renderedFile)
   },
-  async generateByDatasetByOrganisation () {
-    const organisations = await csv().fromFile(__dirname + '/organisation-collection/collection/organisation.csv')
-    const brownfields = await csv().fromFile(__dirname + '/brownfield-land-collection/index/dataset.csv')
-
-    organisations.forEach(function (organisation) {
-      const directory = __dirname + '/docs/dataset/brownfield-land/organisation/' + organisation['organisation'].replace(':', '/')
+  async generateByDatasetByOrganisation (organisations, brownfields, boundaries) {
+    return organisations.forEach(organisation => {
+      const renderedDir = path.join(__dirname, `/docs/dataset/brownfield-land/organisation/${organisation['organisation'].replace(':', '/')}`)
+      const renderedPath = path.join(renderedDir, '/map.html')
       const statisticalGeography = organisation['statistical-geography']
+      let singularBoundary = false
 
-      // Get data
-      var boundariesJson = []
-      if (fs.existsSync(__dirname + '/boundaries-collection/collection/local-authority/' + statisticalGeography + '/index.geojson')) {
-        boundariesJson = fs.readFileSync(__dirname + '/boundaries-collection/collection/local-authority/' + statisticalGeography + '/index.geojson', 'utf8')
-      } else {
-        boundariesJson = fs.readFileSync(__dirname + '/boundaries-collection/collection/local-authority/generalised.geojson', 'utf8')
+      if (statisticalGeography) {
+        const boundaryPath = path.join(__dirname, `/boundaries-collection/collection/local-authority/${statisticalGeography}/index.geojson`)
+        if (fs.existsSync(boundaryPath)) {
+          singularBoundary = JSON.parse(fs.readFileSync(boundaryPath), 'utf8')
+        }
       }
 
-      var brownfieldJson = brownfields.filter(function (item) {
-        return item['organisation'] === organisation['organisation']
+      const renderedFile = nunjucks.render(baseFile, {
+        data: {
+          urlPrefix: urlPrefix,
+          geojson: singularBoundary || boundaries,
+          organisations: [organisation],
+          brownfield: brownfields.filter(item => item['organisation'] === organisation['organisation'])
+        }
       })
 
-      fs.mkdirSync(directory, { recursive: true })
-      fs.writeFileSync(directory + '/map.html', nunjucks.render('src/base.njk', {
-        data: {
-          urlPrefix: process.env.IS_PROD ? 'https://digital-land.github.io/map-templates' : '',
-          geojson: JSON.parse(boundariesJson),
-          organisations: [organisation],
-          brownfield: brownfieldJson
-        }
-      }))
+      fs.mkdirSync(renderedDir, { recursive: true })
+      return fs.writeFileSync(renderedPath, renderedFile)
     })
   },
-  async generateByResource () {
-    const resources = fs.readdirSync(__dirname + '/brownfield-land-collection/var/transformed')
-    const organisations = await csv().fromFile(__dirname + '/organisation-collection/collection/organisation.csv')
+  async generateByResource (organisations) {
+    const resourcesDir = path.join(__dirname, '/brownfield-land-collection/var/transformed')
 
-    return Promise.all(resources.map(async function (resource) {
-      const directory = __dirname + '/docs/resource/' + resource.replace('.csv', '')
-      const resourceJson = await csv().fromFile(__dirname + '/brownfield-land-collection/var/transformed/' + resource)
+    const resources = fs.readdirSync(resourcesDir).filter(file => file.endsWith('.csv'))
 
-      const organisationsAppearingInResource = [...new Set(resourceJson.map(function (row) {
-        return row['organisation']
-      }))]
+    return Promise.all(resources.map(async resource => {
+      const renderedDir = path.join(__dirname, `/docs/resource/${resource.replace('.csv', '')}`)
+      const renderedPath = path.join(renderedDir, '/map.html')
+      const resourceJson = await csv().fromFile(path.join(resourcesDir, resource))
 
-      const statisticalGeographies = organisationsAppearingInResource.map(function (row) {
-        const org = organisations.find(function (organisation) {
-          return organisation['organisation'] === row
-        })
-        return org ? org['statistical-geography'] : null
-      }).filter(function (row) {
-        return row
-      })
+      const organisationsAppearing = [...new Set(resourceJson.map(row => row['organisation']))].filter(row => row)
 
-      var boundariesJson = []
-      statisticalGeographies.forEach(function (sg) {
-        if (fs.existsSync(__dirname + '/boundaries-collection/collection/local-authority/' + sg + '/index.geojson')) {
-          boundariesJson = JSON.parse(fs.readFileSync(__dirname + '/boundaries-collection/collection/local-authority/' + sg + '/index.geojson', 'utf8'))
+      const statisticalGeographies = organisationsAppearing.map(row => {
+        const organisation = organisations.find(organisation => organisation['organisation'] === row)
+
+        return organisation ? organisation['statistical-geography'] : false
+      }).filter(row => row)
+
+      let boundaries = []
+      for (const geography of statisticalGeographies) {
+        const geojsonFile = path.join(__dirname, `/boundaries-collection/collection/local-authority/${geography}/index.geojson`)
+        if (fs.existsSync(geojsonFile)) {
+          boundaries = JSON.parse(fs.readFileSync(geojsonFile, 'utf8'))
         }
-      })
+      }
 
-      // var boundariesJson = statisticalGeographies.map(async function (sg) {
-      //   if (fs.existsSync(__dirname + '/boundaries-collection/collection/local-authority/' + sg + '/index.geojson')) {
-      //     return JSON.parse(fs.readFileSync(__dirname + '/boundaries-collection/collection/local-authority/' + sg + '/index.geojson', 'utf8'))
-      //   }
-      // }).filter(function (row) {
-      //   return row.length
-      // })
-
-      // const statisticalGeographies = organisationsAppearingInResource.map(function (row) {
-      //   return organisations.find(function (organisation) {
-      //     return organisation['organisation'] === row
-      //   })['statistical-geography']
-      // })
-
-      // var filteredStatisticalGeographies = statisticalGeographies.filter(function (sg) {
-      //   return fs.existsSync(__dirname + '/boundaries-collection/collection/local-authority/' + sg + '/index.geojson')
-      // })
-
-      // if (filteredStatisticalGeographies.length) {
-      //   boundariesJson = await Promise.all(filteredStatisticalGeographies.map(async function (sg) {
-      //     // if (fs.existsSync(__dirname + '/boundaries-collection/collection/local-authority/' + sg + '/index.geojson')) {
-      //     return JSON.parse(fs.readFileSync(__dirname + '/boundaries-collection/collection/local-authority/' + sg + '/index.geojson', 'utf8'))
-      //     // }
-      //   }))
-      // } else {
-      //   boundariesJson = JSON.parse(fs.readFileSync(__dirname + '/boundaries-collection/collection/local-authority/generalised.geojson', 'utf8'))
-      // }
-
-      fs.mkdirSync(directory, { recursive: true })
-      fs.writeFileSync(directory + '/map.html', nunjucks.render('src/base.njk', {
+      const renderedFile = nunjucks.render(baseFile, {
         data: {
-          urlPrefix: process.env.IS_PROD ? 'https://digital-land.github.io/map-templates' : '',
-          geojson: boundariesJson,
-          organisations: organisations.filter(function (organisation) {
-            return (organisationsAppearingInResource.includes(organisation['organisation']))
-          }),
+          urlPrefix: urlPrefix,
+          geojson: boundaries,
+          organisations: organisations.filter(organisation => organisationsAppearing.includes(organisation['organisation'])),
           brownfield: resourceJson
         }
-      }))
+      })
+
+      fs.mkdirSync(renderedDir, { recursive: true })
+      return fs.writeFileSync(renderedPath, renderedFile)
     }))
-  },
-  generateNationalMap () {
-
   }
-}
+};
 
-actions.generateByDatasetByOrganisation()
-actions.generateByResource()
-actions.generateByDataset()
+(async () => {
+  const organisations = await csv().fromFile(path.join(__dirname, '/organisation-collection/collection/organisation.csv'))
+  const brownfields = await csv().fromFile(path.join(__dirname, '/brownfield-land-collection/index/dataset.csv'))
+  const boundaries = JSON.parse(fs.readFileSync(path.join(__dirname, '/boundaries-collection/collection/local-authority/generalised.geojson'), 'utf8'))
+
+  await actions.generateByDataset(organisations, brownfields, boundaries)
+  await actions.generateByDatasetByOrganisation(organisations, brownfields, boundaries)
+  await actions.generateByResource(organisations)
+})()
