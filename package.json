@@ -18,6 +18,14 @@
   "homepage": "https://github.com/digital-land/map-templates#readme",
   "dependencies": {
     "csvtojson": "^2.0.10",
-    "nunjucks": "^3.2.1"
+    "http-server": "^0.12.1",
+    "leaflet": "^1.6.0",
+    "leaflet-sidebar": "^0.2.0",
+    "leaflet.fullscreen": "^1.6.0",
+    "leaflet.markercluster": "^1.4.1",
+    "node-sass": "^4.13.1",
+    "nunjucks": "^3.2.1",
+    "papaparse": "^5.1.1",
+    "uglify-js": "^3.8.0"
   }
 }

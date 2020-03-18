@@ -1,0 +1,12 @@
+<link rel="stylesheet" href="/map.css" crossorigin="" />
+
+<div id="map"></div>
+<div id="sidebar"></div>
+
+<script>
+  var geoJson = {{ data.geojson | dump | safe }}
+  var organisations = {{ data.organisations | dump | safe }}
+  var brownfield = {{ data.brownfield | dump | safe }}
+</script>
+
+<script src="/map.js"></script>

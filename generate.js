@@ -18,8 +18,8 @@ const actions = {
       }
     })
 
-    const directory = __dirname + '/dist/dataset/brownfield-land'
-    fs.writeFileSync(directory + '/map.html', nunjucks.render('base.njk', {
+    const directory = __dirname + '/docs/dataset/brownfield-land'
+    fs.writeFileSync(directory + '/map.html', nunjucks.render('src/base.njk', {
       data: {
         geojson: JSON.parse(boundariesJson),
         organisations: organisations,
@@ -32,7 +32,7 @@ const actions = {
     const brownfields = await csv().fromFile(__dirname + '/brownfield-land-collection/index/dataset.csv')
 
     organisations.forEach(function (organisation) {
-      const directory = __dirname + '/dist/dataset/brownfield-land/organisation/' + organisation['organisation'].replace(':', '/')
+      const directory = __dirname + '/docs/dataset/brownfield-land/organisation/' + organisation['organisation'].replace(':', '/')
       const statisticalGeography = organisation['statistical-geography']
 
       // Get data
@@ -48,7 +48,7 @@ const actions = {
       })
 
       fs.mkdirSync(directory, { recursive: true })
-      fs.writeFileSync(directory + '/map.html', nunjucks.render('base.njk', {
+      fs.writeFileSync(directory + '/map.html', nunjucks.render('src/base.njk', {
         data: {
           geojson: JSON.parse(boundariesJson),
           organisations: [organisation],
@@ -62,7 +62,7 @@ const actions = {
     const organisations = await csv().fromFile(__dirname + '/organisation-collection/collection/organisation.csv')
 
     return Promise.all(resources.map(async function (resource) {
-      const directory = __dirname + '/dist/resource/' + resource.replace('.csv', '')
+      const directory = __dirname + '/docs/resource/' + resource.replace('.csv', '')
       const resourceJson = await csv().fromFile(__dirname + '/brownfield-land-collection/var/transformed/' + resource)
 
       const organisationsAppearingInResource = [...new Set(resourceJson.map(function (row) {
@@ -114,7 +114,7 @@ const actions = {
       // }
 
       fs.mkdirSync(directory, { recursive: true })
-      fs.writeFileSync(directory + '/map.html', nunjucks.render('base.njk', {
+      fs.writeFileSync(directory + '/map.html', nunjucks.render('src/base.njk', {
         data: {
           geojson: boundariesJson,
           organisations: organisations.filter(function (organisation) {

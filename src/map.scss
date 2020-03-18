@@ -1,0 +1,38 @@
+@import '../node_modules/leaflet/dist/leaflet';
+@import '../node_modules/leaflet.fullscreen/Control.FullScreen';
+@import '../node_modules/leaflet-sidebar/src/L.Control.Sidebar.scss';
+
+.fullscreen-icon { background-image: url(images/icon-fullscreen.png); }
+.leaflet-retina .fullscreen-icon { background-image: url(images/icon-fullscreen-2x.png); background-size: 26px 26px; }
+
+#map {
+  width: 960px;
+  height: 640px;
+  transform: translate(-50%,-50%);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+}
+
+.leaflet-sidebar {
+  display: none;
+  width: 200px;
+}
+
+.leaflet-sidebar.visible {
+  display: block;
+}
+
+.leaflet-sidebar .close {
+  z-index: 10000;
+}
+
+.leaflet-marker-icon.marker-cluster {
+  line-height: 18px;
+  text-align: center;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  background: #fff;
+  border: 2px solid #222;
+}
