@@ -15,5 +15,9 @@
   "bugs": {
     "url": "https://github.com/digital-land/map-templates/issues"
   },
-  "homepage": "https://github.com/digital-land/map-templates#readme"
+  "homepage": "https://github.com/digital-land/map-templates#readme",
+  "dependencies": {
+    "csvtojson": "^2.0.10",
+    "nunjucks": "^3.2.1"
+  }
 }

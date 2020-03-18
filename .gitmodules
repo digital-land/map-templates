@@ -7,3 +7,6 @@
 [submodule "organisation-collection"]
 	path = organisation-collection
 	url = https://github.com/digital-land/organisation-collection.git
+[submodule "dataset-collection"]
+	path = dataset-collection
+	url = https://github.com/digital-land/dataset-collection.git
