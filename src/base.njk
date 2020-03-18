@@ -1,4 +1,4 @@
-<link rel="stylesheet" href="/map.css" crossorigin="" />
+<link rel="stylesheet" href="{{ data.urlPrefix }}/map.css" crossorigin="" />
 
 <div id="map"></div>
 <div id="sidebar"></div>
@@ -9,4 +9,4 @@
   var brownfield = {{ data.brownfield | dump | safe }}
 </script>
 
-<script src="/map.js"></script>
+<script src="{{ data.urlPrefix }}/map.js"></script>

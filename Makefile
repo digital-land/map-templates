@@ -15,6 +15,9 @@ build: assets js
 	mkdir -p $(DOCS_DIR)
 	node generate.js
 
+build_prod:
+	IS_PROD=true make build
+
 js:
 	$(NODE_MODULES_BIN)/uglifyjs --compress -o $(DOCS_DIR)map.js -- \
 		$(NODE_MODULES)/leaflet/dist/Leaflet.js \

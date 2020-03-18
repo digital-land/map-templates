@@ -21,6 +21,7 @@ const actions = {
     const directory = __dirname + '/docs/dataset/brownfield-land'
     fs.writeFileSync(directory + '/map.html', nunjucks.render('src/base.njk', {
       data: {
+        urlPrefix: process.env.IS_PROD ? 'https://digital-land.github.io/map-templates' : '',
         geojson: JSON.parse(boundariesJson),
         organisations: organisations,
         brownfield: brownfieldJson
@@ -50,6 +51,7 @@ const actions = {
       fs.mkdirSync(directory, { recursive: true })
       fs.writeFileSync(directory + '/map.html', nunjucks.render('src/base.njk', {
         data: {
+          urlPrefix: process.env.IS_PROD ? 'https://digital-land.github.io/map-templates' : '',
           geojson: JSON.parse(boundariesJson),
           organisations: [organisation],
           brownfield: brownfieldJson
@@ -116,6 +118,7 @@ const actions = {
       fs.mkdirSync(directory, { recursive: true })
       fs.writeFileSync(directory + '/map.html', nunjucks.render('src/base.njk', {
         data: {
+          urlPrefix: process.env.IS_PROD ? 'https://digital-land.github.io/map-templates' : '',
           geojson: boundariesJson,
           organisations: organisations.filter(function (organisation) {
             return (organisationsAppearingInResource.includes(organisation['organisation']))
