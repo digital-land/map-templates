@@ -1,13 +1,17 @@
+// Tile layers
+var tiles = L.tileLayer('https://tiles.wmflabs.org/bw-mapnik/{z}/{x}/{y}.png', {
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+})
+
+// Map setup
+var latLng = L.latLng(52.561928, -1.464854)
 var map = L.map('map', {
+  center: latLng,
+  zoom: 7,
+  layers: [tiles],
   preferCanvas: true,
   fullscreenControl: true
-}).setView([52.561928, -1.464854], 7)
-
-// Tile layers
-L.tileLayer('https://tiles.wmflabs.org/bw-mapnik/{z}/{x}/{y}.png', {
-  id: 'base',
-  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-}).addTo(map)
+})
 
 // Sidebar
 var sidebar = L.control.sidebar('sidebar', {
@@ -33,22 +37,23 @@ geoJson = geoJson.features.filter(function (item) {
   return item.properties.lad19cd.startsWith('E')
 }).map(function (item) {
   var lad19cd = item.properties.lad19cd
-  if (item.properties.lad19cd === 'E06000057') {
+
+  if (lad19cd === 'E06000057') {
     // Northumberland
     lad19cd = 'E06000048'
-  } else if (item.properties.lad19cd === 'E07000240') {
+  } else if (lad19cd === 'E07000240') {
     // St Albans
     lad19cd = 'E07000100'
-  } else if (item.properties.lad19cd === 'E07000241') {
+  } else if (lad19cd === 'E07000241') {
     // Welwyn Hatfield
     lad19cd = 'E07000104'
-  } else if (item.properties.lad19cd === 'E07000242') {
+  } else if (lad19cd === 'E07000242') {
     // East Hertfordshire
     lad19cd = 'E07000097'
-  } else if (item.properties.lad19cd === 'E07000243') {
+  } else if (lad19cd === 'E07000243') {
     // Stevenage
     lad19cd = 'E07000101'
-  } else if (item.properties.lad19cd === 'E08000037') {
+  } else if (lad19cd === 'E08000037') {
     // Gateshead
     lad19cd = 'E08000020'
   }

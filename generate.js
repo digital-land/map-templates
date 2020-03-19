@@ -19,8 +19,7 @@ const actions = {
           organisation: row.organisation,
           latitude: row.latitude,
           longitude: row.longitude,
-          hectares: row.hectares,
-          'end-date': row['end-date']
+          hectares: row.hectares
         }))
       }
     })

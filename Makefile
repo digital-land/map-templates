@@ -6,6 +6,7 @@ DOCS_DIR=docs/
 SRC_DIR=src/
 
 init:
+	git submodule update --init --recursive --remote
 	npm install
 
 clean:
