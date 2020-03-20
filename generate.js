@@ -7,20 +7,89 @@ const baseFile = 'src/base.njk'
 const urlPrefix = process.env.IS_PROD ? 'https://digital-land.github.io/map-templates' : ''
 
 const actions = {
+  simplifyBrownfieldPoints (brownfields, strict) {
+    const organisations = {}
+
+    brownfields.forEach(function (row) {
+      if (!Object.keys(organisations).includes(row['organisation'])) {
+        organisations[row['organisation']] = []
+      }
+
+      var obj = row
+
+      if (row.latitude && row.longitude) {
+        if (strict) {
+          var obj = {}
+        }
+
+        obj.size = row['hectares']
+        obj.point = [row.longitude, row.latitude]
+
+        organisations[row['organisation']].push(obj)
+      }
+    })
+
+    return organisations
+  },
+  fixBoundaries (boundaries, organisations) {
+    return {
+      type: 'FeatureCollection',
+      features: boundaries.map(function (boundary) {
+        boundary.features = boundary.features.filter(function (feature) {
+        // Only show boundaries in England
+          return feature.properties.lad19cd.startsWith('E')
+        }).map(function (feature) {
+          var lad19cd = feature.properties.lad19cd
+
+          // Fix LAD19CD numbers
+          if (lad19cd === 'E06000057') {
+          // Northumberland
+            lad19cd = 'E06000048'
+          } else if (lad19cd === 'E07000240') {
+          // St Albans
+            lad19cd = 'E07000100'
+          } else if (lad19cd === 'E07000241') {
+          // Welwyn Hatfield
+            lad19cd = 'E07000104'
+          } else if (lad19cd === 'E07000242') {
+          // East Hertfordshire
+            lad19cd = 'E07000097'
+          } else if (lad19cd === 'E07000243') {
+          // Stevenage
+            lad19cd = 'E07000101'
+          } else if (lad19cd === 'E08000037') {
+          // Gateshead
+            lad19cd = 'E08000020'
+          }
+
+          // Add organisation details to features
+          var organisation = organisations.find(function (organisation) {
+            if (organisation['statistical-geography'] && organisation['statistical-geography'].length) {
+              return organisation['statistical-geography'].toString().toLowerCase() === lad19cd.toString().toLowerCase()
+            }
+          })
+
+          feature.properties.organisation = organisation || false
+
+          if (!feature.properties.organisation) {
+            console.log('no organisation:', feature.properties)
+          }
+
+          return feature
+        })
+
+        return boundary
+      })
+    }
+  },
   async generateByDataset (organisations, brownfields, boundaries) {
     const renderedDir = path.join(__dirname, '/docs/dataset/brownfield-land')
     const renderedPath = path.join(renderedDir, 'map.html')
     const renderedFile = nunjucks.render(baseFile, {
       data: {
         urlPrefix: urlPrefix,
-        geojson: boundaries,
-        organisations: organisations,
-        brownfield: brownfields.map(row => ({
-          organisation: row.organisation,
-          latitude: row.latitude,
-          longitude: row.longitude,
-          hectares: row.hectares
-        }))
+        boundaries: boundaries,
+        brownfield: actions.simplifyBrownfieldPoints(brownfields, true)
       }
     })
 
@@ -28,25 +97,27 @@ const actions = {
     return fs.writeFileSync(renderedPath, renderedFile)
   },
   async generateByDatasetByOrganisation (organisations, brownfields, boundaries) {
+    const simplifiedBrownfieldPoints = actions.simplifyBrownfieldPoints(brownfields, false)
     return organisations.forEach(organisation => {
       const renderedDir = path.join(__dirname, `/docs/dataset/brownfield-land/organisation/${organisation['organisation'].replace(':', '/')}`)
       const renderedPath = path.join(renderedDir, '/map.html')
       const statisticalGeography = organisation['statistical-geography']
-      let singularBoundary = false
+      const singularBoundary = []
 
       if (statisticalGeography) {
         const boundaryPath = path.join(__dirname, `/boundaries-collection/collection/local-authority/${statisticalGeography}/index.geojson`)
         if (fs.existsSync(boundaryPath)) {
-          singularBoundary = JSON.parse(fs.readFileSync(boundaryPath), 'utf8')
+          singularBoundary.push(JSON.parse(fs.readFileSync(boundaryPath), 'utf8'))
         }
       }
 
       const renderedFile = nunjucks.render(baseFile, {
         data: {
           urlPrefix: urlPrefix,
-          geojson: singularBoundary || boundaries,
-          organisations: [organisation],
-          brownfield: brownfields.filter(item => item['organisation'] === organisation['organisation'])
+          boundaries: (singularBoundary.length) ? actions.fixBoundaries(singularBoundary, organisations) : boundaries,
+          brownfield: {
+            [organisation['organisation']]: simplifiedBrownfieldPoints[organisation['organisation']]
+          }
         }
       })
 
@@ -72,19 +143,18 @@ const actions = {
         return organisation ? organisation['statistical-geography'] : false
       }).filter(row => row)
 
-      let boundaries = []
+      const boundaries = []
       for (const geography of statisticalGeographies) {
         const geojsonFile = path.join(__dirname, `/boundaries-collection/collection/local-authority/${geography}/index.geojson`)
         if (fs.existsSync(geojsonFile)) {
-          boundaries = JSON.parse(fs.readFileSync(geojsonFile, 'utf8'))
+          boundaries.push(JSON.parse(fs.readFileSync(geojsonFile, 'utf8')))
         }
       }
 
       const renderedFile = nunjucks.render(baseFile, {
         data: {
           urlPrefix: urlPrefix,
-          geojson: boundaries,
-          organisations: organisations.filter(organisation => organisationsAppearing.includes(organisation['organisation'])),
+          boundaries: actions.fixBoundaries(boundaries, organisations),
           brownfield: resourceJson
         }
       })
@@ -99,8 +169,9 @@ const actions = {
   const organisations = await csv().fromFile(path.join(__dirname, '/organisation-collection/collection/organisation.csv'))
   const brownfields = await csv().fromFile(path.join(__dirname, '/brownfield-land-collection/index/dataset.csv'))
   const boundaries = JSON.parse(fs.readFileSync(path.join(__dirname, '/boundaries-collection/collection/local-authority/generalised.geojson'), 'utf8'))
+  const fixedBoundaries = actions.fixBoundaries([boundaries], organisations)
 
-  await actions.generateByDataset(organisations, brownfields, boundaries)
-  await actions.generateByDatasetByOrganisation(organisations, brownfields, boundaries)
-  await actions.generateByResource(organisations)
+  await actions.generateByDataset(organisations, brownfields, fixedBoundaries)
+  await actions.generateByDatasetByOrganisation(organisations, brownfields, fixedBoundaries)
+  // await actions.generateByResource(organisations)
 })()

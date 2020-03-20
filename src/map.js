@@ -7,7 +7,7 @@ var tiles = L.tileLayer('https://tiles.wmflabs.org/bw-mapnik/{z}/{x}/{y}.png', {
 var latLng = L.latLng(52.561928, -1.464854)
 var map = L.map('map', {
   center: latLng,
-  zoom: 7,
+  zoom: 1,
   layers: [tiles],
   preferCanvas: true,
   fullscreenControl: true
@@ -20,77 +20,19 @@ var sidebar = L.control.sidebar('sidebar', {
 
 map.addControl(sidebar)
 
-// Brownfield Features
-var brownfieldFeatures = brownfield.map(function (point) {
-  return {
-    type: 'Feature',
-    geometry: {
-      type: 'Point',
-      coordinates: [point.longitude, point.latitude]
-    },
-    properties: point
-  }
-})
-
-// Local authority boundaries (England only)
-geoJson = geoJson.features.filter(function (item) {
-  return item.properties.lad19cd.startsWith('E')
-}).map(function (item) {
-  var lad19cd = item.properties.lad19cd
-
-  if (lad19cd === 'E06000057') {
-    // Northumberland
-    lad19cd = 'E06000048'
-  } else if (lad19cd === 'E07000240') {
-    // St Albans
-    lad19cd = 'E07000100'
-  } else if (lad19cd === 'E07000241') {
-    // Welwyn Hatfield
-    lad19cd = 'E07000104'
-  } else if (lad19cd === 'E07000242') {
-    // East Hertfordshire
-    lad19cd = 'E07000097'
-  } else if (lad19cd === 'E07000243') {
-    // Stevenage
-    lad19cd = 'E07000101'
-  } else if (lad19cd === 'E08000037') {
-    // Gateshead
-    lad19cd = 'E08000020'
-  }
-
-  item.properties.organisation = organisations.find(function (organisation) {
-    if (organisation['statistical-geography'] && organisation['statistical-geography'].length) {
-      return organisation['statistical-geography'].toString().toLowerCase() === lad19cd.toString().toLowerCase()
-    }
-  })
-
-  return item
-})
-
-L.geoJSON(geoJson, {
+var geojson = L.geoJSON(boundaries, {
   style: {
     fillOpacity: 0,
     weight: 2,
     color: 'gray'
   },
   onEachFeature: function (feature, layer) {
-    if (organisations.length === 1) {
-      map.fitBounds(layer.getBounds())
-    }
-
     if (!feature.properties.organisation) {
       layer.setStyle({
         fillColor: 'red',
         fillOpacity: 0.25
       })
     } else {
-      var thisOrganisationsFeatures = brownfieldFeatures.filter(function (brownfieldFeature) {
-        if (brownfieldFeature.properties.organisation.toLowerCase() === feature.properties.organisation.organisation.toLowerCase()) {
-          return true
-        }
-        return false
-      })
-
       var brownfieldMarkers = L.markerClusterGroup({
         showCoverageOnHover: false,
         zoomToBoundsOnClick: false,
@@ -103,7 +45,21 @@ L.geoJSON(geoJson, {
       })
       var brownfieldOnMap = L.geoJSON({
         type: 'FeatureCollection',
-        features: thisOrganisationsFeatures
+        features: brownfield[feature.properties.organisation.organisation].map(function (point) {
+          return {
+            type: 'Feature',
+            geometry: {
+              type: 'Point',
+              coordinates: point.point
+            },
+            properties: {
+              organisation: feature.properties.organisation.organisation,
+              longitude: point.point[0],
+              latitude: point.point[1],
+              hectares: point.size
+            }
+          }
+        })
       }, {
         pointToLayer: function (feature, latlng) {
           var size = isNaN(feature.properties.hectares) ? 100 : (Math.sqrt((feature.properties.hectares * 10000) / Math.PI))
@@ -123,9 +79,9 @@ L.geoJSON(geoJson, {
                     return (row.latitude === feature.properties.latitude.toString()) && (row.longitude === feature.properties.longitude.toString())
                   })
 
-                  if (point) {
-                    content = ''
+                  var content = ''
 
+                  if (point) {
                     Object.keys(point).forEach(function (key) {
                       content = content + key + ': ' + point[key] + '<br>'
                     })
@@ -164,3 +120,6 @@ L.geoJSON(geoJson, {
     })
   }
 }).addTo(map)
+
+// Zoom into boundaries or points
+map.fitBounds(geojson.getBounds())
