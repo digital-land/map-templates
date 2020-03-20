@@ -7,20 +7,98 @@ const baseFile = 'src/base.njk'
 const urlPrefix = process.env.IS_PROD ? 'https://digital-land.github.io/map-templates' : ''
 
 const actions = {
+  simplifyDataPoints (organisations, brownfields, strict) {
+    const data = {}
+
+    organisations.forEach(organisation => {
+      data[organisation['organisation']] = []
+    })
+
+    brownfields.forEach(brownfield => {
+      let obj = brownfield
+      if (strict) {
+        obj = {}
+      }
+
+      // Add point
+      let point = []
+      if (!isNaN(parseFloat(brownfield['latitude'])) && !isNaN(parseFloat(brownfield['longitude']))) {
+        point = [parseFloat(brownfield['latitude']), parseFloat(brownfield['longitude'])]
+      }
+      obj.point = point
+
+      // Add hectares
+      obj.size = isNaN(parseFloat(brownfield['hectares'])) ? 0 : parseFloat(brownfield['hectares'])
+
+      if (!Object.keys(data).includes(brownfield['organisation'])) {
+        data[brownfield['organisation']] = []
+      }
+
+      if (obj.point.length) {
+        data[brownfield['organisation']].push(obj)
+      }
+    })
+
+    return data
+  },
+  simplifyBoundaries (organisations, boundaries) {
+    return {
+      type: 'FeatureCollection',
+      features: boundaries.features.filter(feature => feature.properties.lad19cd.startsWith('E')).map(feature => {
+        const organisation = organisations.find(organisation => {
+          let lad19cd = feature.properties.lad19cd
+
+          if (lad19cd === 'E06000057') {
+            // Northumberland
+            lad19cd = 'E06000048'
+          } else if (lad19cd === 'E07000240') {
+            // St Albans
+            lad19cd = 'E07000100'
+          } else if (lad19cd === 'E07000241') {
+            // Welwyn Hatfield
+            lad19cd = 'E07000104'
+          } else if (lad19cd === 'E07000242') {
+            // East Hertfordshire
+            lad19cd = 'E07000097'
+          } else if (lad19cd === 'E07000243') {
+            // Stevenage
+            lad19cd = 'E07000101'
+          } else if (lad19cd === 'E08000037') {
+            // Gateshead
+            lad19cd = 'E08000020'
+          }
+
+          return lad19cd === organisation['statistical-geography']
+        }) || {}
+
+        const organisationObj = {}
+
+        Object.keys(organisation).forEach(key => {
+          if (key === 'organisation' || key === 'name') {
+            organisationObj[key] = organisation[key]
+          }
+        })
+
+        return {
+          type: 'Feature',
+          properties: {
+            lad19cd: feature.properties.lad19cd,
+            organisation: organisationObj
+          },
+          geometry: feature.geometry
+        }
+      })
+    }
+  },
   async generateByDataset (organisations, brownfields, boundaries) {
     const renderedDir = path.join(__dirname, '/docs/dataset/brownfield-land')
     const renderedPath = path.join(renderedDir, 'map.html')
+
     const renderedFile = nunjucks.render(baseFile, {
       data: {
         urlPrefix: urlPrefix,
-        geojson: boundaries,
-        organisations: organisations,
-        brownfield: brownfields.map(row => ({
-          organisation: row.organisation,
-          latitude: row.latitude,
-          longitude: row.longitude,
-          hectares: row.hectares
-        }))
+        boundaries: actions.simplifyBoundaries(organisations, boundaries),
+        brownfield: actions.simplifyDataPoints(organisations, brownfields, true)
       }
     })
 
@@ -101,6 +179,6 @@ const actions = {
   const boundaries = JSON.parse(fs.readFileSync(path.join(__dirname, '/boundaries-collection/collection/local-authority/generalised.geojson'), 'utf8'))
 
   await actions.generateByDataset(organisations, brownfields, boundaries)
-  await actions.generateByDatasetByOrganisation(organisations, brownfields, boundaries)
-  await actions.generateByResource(organisations)
+  // await actions.generateByDatasetByOrganisation(organisations, brownfields, boundaries)
+  // await actions.generateByResource(organisations)
 })()
