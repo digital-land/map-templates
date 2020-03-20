@@ -34,9 +34,10 @@ var geoBoundaries = L.geoJSON(boundaries, {
       })
     }
 
+    var brownfieldPoints = brownfield[feature.properties.organisation.organisation] ? brownfield[feature.properties.organisation.organisation] : []
     var geoPoints = L.geoJSON({
       type: 'FeatureCollection',
-      features: brownfield[feature.properties.organisation.organisation].map(function (point) {
+      features: brownfieldPoints.map(function (point) {
         return {
           type: 'Feature',
           geometry: {

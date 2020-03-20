@@ -91,6 +91,7 @@ const actions = {
     }
   },
   async generateByDataset (organisations, brownfields, boundaries) {
+    console.log('National dataset: generating map')
     const renderedDir = path.join(__dirname, '/docs/dataset/brownfield-land')
     const renderedPath = path.join(renderedDir, 'map.html')
 
@@ -98,46 +99,55 @@ const actions = {
       data: {
         urlPrefix: urlPrefix,
         boundaries: actions.simplifyBoundaries(organisations, boundaries),
-        brownfield: actions.simplifyDataPoints(organisations, brownfields, true)
+        brownfield: brownfields
       }
     })
 
     fs.mkdirSync(renderedDir, { recursive: true })
+    console.log('National dataset: finished generating map')
     return fs.writeFileSync(renderedPath, renderedFile)
   },
   async generateByDatasetByOrganisation (organisations, brownfields, boundaries) {
-    return organisations.forEach(organisation => {
+    const simplifiedBoundaries = actions.simplifyBoundaries(organisations, boundaries)
+
+    return organisations.forEach(function (organisation) {
+      console.log('Brownfield by organisation: generating ' + organisation.organisation + ' map')
       const renderedDir = path.join(__dirname, `/docs/dataset/brownfield-land/organisation/${organisation['organisation'].replace(':', '/')}`)
       const renderedPath = path.join(renderedDir, '/map.html')
-      const statisticalGeography = organisation['statistical-geography']
-      let singularBoundary = false
+      var singularBoundary = false
 
-      if (statisticalGeography) {
-        const boundaryPath = path.join(__dirname, `/boundaries-collection/collection/local-authority/${statisticalGeography}/index.geojson`)
+      if (organisation['statistical-geography']) {
+        const boundaryPath = path.join(__dirname, `/boundaries-collection/collection/local-authority/${organisation['statistical-geography']}/index.geojson`)
         if (fs.existsSync(boundaryPath)) {
-          singularBoundary = JSON.parse(fs.readFileSync(boundaryPath), 'utf8')
+          singularBoundary = JSON.parse(fs.readFileSync(boundaryPath, 'utf8'))
         }
+      }
+
+      if (!singularBoundary && organisation['statistical-geography']) {
+        console.log(organisation.organisation, organisation['statistical-geography'], ': no boundary present')
       }
 
       const renderedFile = nunjucks.render(baseFile, {
         data: {
           urlPrefix: urlPrefix,
-          geojson: singularBoundary || boundaries,
-          organisations: [organisation],
-          brownfield: brownfields.filter(item => item['organisation'] === organisation['organisation'])
+          boundaries: singularBoundary ? actions.simplifyBoundaries(organisations, singularBoundary) : simplifiedBoundaries,
+          brownfield: {
+            [organisation.organisation]: brownfields[organisation.organisation]
+          }
         }
       })
 
+      console.log('Brownfield by organisation: finished generating ' + organisation.organisation + ' map')
       fs.mkdirSync(renderedDir, { recursive: true })
       return fs.writeFileSync(renderedPath, renderedFile)
     })
   },
   async generateByResource (organisations) {
     const resourcesDir = path.join(__dirname, '/brownfield-land-collection/var/transformed')
-
     const resources = fs.readdirSync(resourcesDir).filter(file => file.endsWith('.csv'))
 
     return Promise.all(resources.map(async resource => {
+      console.log('Brownfield by resource: generating map for', resource)
       const renderedDir = path.join(__dirname, `/docs/resource/${resource.replace('.csv', '')}`)
       const renderedPath = path.join(renderedDir, '/map.html')
       const resourceJson = await csv().fromFile(path.join(resourcesDir, resource))
@@ -168,6 +178,7 @@ const actions = {
       })
 
       fs.mkdirSync(renderedDir, { recursive: true })
+      console.log('Brownfield by resource: finished map for', resource)
       return fs.writeFileSync(renderedPath, renderedFile)
     }))
   }
@@ -178,7 +189,10 @@ const actions = {
   const brownfields = await csv().fromFile(path.join(__dirname, '/brownfield-land-collection/index/dataset.csv'))
   const boundaries = JSON.parse(fs.readFileSync(path.join(__dirname, '/boundaries-collection/collection/local-authority/generalised.geojson'), 'utf8'))
 
-  await actions.generateByDataset(organisations, brownfields, boundaries)
-  // await actions.generateByDatasetByOrganisation(organisations, brownfields, boundaries)
-  // await actions.generateByResource(organisations)
+  const simplifiedDataPointsRemote = actions.simplifyDataPoints(organisations, brownfields, true)
+  const simplifiedDataPointsLocal = actions.simplifyDataPoints(organisations, brownfields, false)
+
+  await actions.generateByDataset(organisations, simplifiedDataPointsRemote, boundaries)
+  await actions.generateByDatasetByOrganisation(organisations, simplifiedDataPointsLocal, boundaries)
+  await actions.generateByResource(organisations)
 })()
