@@ -60,6 +60,24 @@ var geoBoundaries = L.geoJSON(boundaries, {
             sidebar.setContent('<h2>Loading...</h2>')
             sidebar.show()
 
+            if (mapIsLocal) {
+              var point = brownfield[feature.properties.organisation].find(function (row) {
+                return (row['latitude'] === feature.geometry.coordinates[0].toString()) && (row['longitude'] === feature.geometry.coordinates[1].toString())
+              })
+
+              var content = ''
+
+              if (point) {
+                Object.keys(point).forEach(function (key) {
+                  content = content + key + ': ' + point[key] + '<br>'
+                })
+              } else {
+                content = '<h2>Point not found - debug info:</h2><pre>' + JSON.stringify(results.data) + '</pre><h3>Looking for a row with latitude, longitude:</h3>' + feature.geometry.coordinates[0].toString() + ',' + feature.geometry.coordinates[1].toString()
+              }
+
+              return sidebar.setContent(content)
+            }
+
             // Could be smarter here and fill an object to stop loading if more than one point is clicked
             return Papa.parse('https://raw.githubusercontent.com/digital-land/map/master/docs/data/brownfield/' + feature.properties.organisation.toLowerCase().replace(':', '-') + '.csv', {
               download: true,

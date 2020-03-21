@@ -97,9 +97,10 @@ const actions = {
 
     const renderedFile = nunjucks.render(baseFile, {
       data: {
-        urlPrefix: urlPrefix,
+        urlPrefix,
         boundaries: actions.simplifyBoundaries(organisations, boundaries),
-        brownfield: brownfields
+        brownfield: brownfields,
+        mapIsLocal: false
       }
     })
 
@@ -110,11 +111,11 @@ const actions = {
   async generateByDatasetByOrganisation (organisations, brownfields, boundaries) {
     const simplifiedBoundaries = actions.simplifyBoundaries(organisations, boundaries)
 
-    return organisations.forEach(function (organisation) {
-      console.log('Brownfield by organisation: generating ' + organisation.organisation + ' map')
+    return organisations.forEach(organisation => {
+      console.log(`Brownfield by organisation: generating ${organisation.organisation} map`)
       const renderedDir = path.join(__dirname, `/docs/dataset/brownfield-land/organisation/${organisation['organisation'].replace(':', '/')}`)
       const renderedPath = path.join(renderedDir, '/map.html')
-      var singularBoundary = false
+      let singularBoundary = false
 
       if (organisation['statistical-geography']) {
         const boundaryPath = path.join(__dirname, `/boundaries-collection/collection/local-authority/${organisation['statistical-geography']}/index.geojson`)
@@ -129,15 +130,16 @@ const actions = {
 
       const renderedFile = nunjucks.render(baseFile, {
         data: {
-          urlPrefix: urlPrefix,
+          urlPrefix,
           boundaries: singularBoundary ? actions.simplifyBoundaries(organisations, singularBoundary) : simplifiedBoundaries,
           brownfield: {
             [organisation.organisation]: brownfields[organisation.organisation]
-          }
+          },
+          mapIsLocal: true
         }
       })
 
-      console.log('Brownfield by organisation: finished generating ' + organisation.organisation + ' map')
+      console.log(`Brownfield by organisation: finished generating ${organisation.organisation} map`)
       fs.mkdirSync(renderedDir, { recursive: true })
       return fs.writeFileSync(renderedPath, renderedFile)
     })
@@ -152,21 +154,13 @@ const actions = {
       const renderedPath = path.join(renderedDir, '/map.html')
       const resourceJson = await csv().fromFile(path.join(resourcesDir, resource))
 
-      const organisationsAppearing = [...new Set(resourceJson.map(function (row) {
-        return row['organisation']
-      }))].filter(function (row) {
-        return row
-      })
+      const organisationsAppearing = [...new Set(resourceJson.map(row => row['organisation']))].filter(row => row)
 
-      const statisticalGeographies = [...new Set(organisationsAppearing.map(function (row) {
-        var organisation = organisations.find(function (organisation) {
-          return organisation['organisation'] === row
-        })
+      const statisticalGeographies = [...new Set(organisationsAppearing.map(row => {
+        const organisation = organisations.find(organisation => organisation['organisation'] === row)
 
         return organisation ? organisation['statistical-geography'] : false
-      }))].filter(function (row) {
-        return row
-      })
+      }))].filter(row => row)
 
       const boundaries = []
       for (const geography of statisticalGeographies) {
@@ -178,16 +172,15 @@ const actions = {
 
       const groupedBoundaries = {
         type: 'FeatureCollection',
-        features: boundaries.map(function (boundary) {
-          return boundary.features
-        }).flat()
+        features: boundaries.map(boundary => boundary.features).flat()
       }
 
       const renderedFile = nunjucks.render(baseFile, {
         data: {
-          urlPrefix: urlPrefix,
+          urlPrefix,
           boundaries: actions.simplifyBoundaries(organisations, groupedBoundaries),
-          brownfield: actions.simplifyDataPoints(organisations, resourceJson, false)
+          brownfield: actions.simplifyDataPoints(organisations, resourceJson, false),
+          mapIsLocal: true
         }
       })
 
