@@ -152,28 +152,42 @@ const actions = {
       const renderedPath = path.join(renderedDir, '/map.html')
       const resourceJson = await csv().fromFile(path.join(resourcesDir, resource))
 
-      const organisationsAppearing = [...new Set(resourceJson.map(row => row['organisation']))].filter(row => row)
+      const organisationsAppearing = [...new Set(resourceJson.map(function (row) {
+        return row['organisation']
+      }))].filter(function (row) {
+        return row
+      })
 
-      const statisticalGeographies = organisationsAppearing.map(row => {
-        const organisation = organisations.find(organisation => organisation['organisation'] === row)
+      const statisticalGeographies = [...new Set(organisationsAppearing.map(function (row) {
+        var organisation = organisations.find(function (organisation) {
+          return organisation['organisation'] === row
+        })
 
         return organisation ? organisation['statistical-geography'] : false
-      }).filter(row => row)
+      }))].filter(function (row) {
+        return row
+      })
 
-      let boundaries = []
+      const boundaries = []
       for (const geography of statisticalGeographies) {
         const geojsonFile = path.join(__dirname, `/boundaries-collection/collection/local-authority/${geography}/index.geojson`)
         if (fs.existsSync(geojsonFile)) {
-          boundaries = JSON.parse(fs.readFileSync(geojsonFile, 'utf8'))
+          boundaries.push(JSON.parse(fs.readFileSync(geojsonFile, 'utf8')))
         }
+      }
+
+      const groupedBoundaries = {
+        type: 'FeatureCollection',
+        features: boundaries.map(function (boundary) {
+          return boundary.features
+        }).flat()
       }
 
       const renderedFile = nunjucks.render(baseFile, {
         data: {
           urlPrefix: urlPrefix,
-          geojson: boundaries,
-          organisations: organisations.filter(organisation => organisationsAppearing.includes(organisation['organisation'])),
-          brownfield: resourceJson
+          boundaries: actions.simplifyBoundaries(organisations, groupedBoundaries),
+          brownfield: actions.simplifyDataPoints(organisations, resourceJson, false)
         }
       })
 

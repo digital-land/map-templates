@@ -76,7 +76,7 @@ var geoBoundaries = L.geoJSON(boundaries, {
                     content = content + key + ': ' + point[key] + '<br>'
                   })
                 } else {
-                  content = '<h2>Point not found - debug info:</h2><pre>' + JSON.stringify(results.data) + '</pre><h3>Looking for a row with latitude, longitude:</h3>' + feature.properties.latitude.toString() + ',' + feature.properties.longitude.toString()
+                  content = '<h2>Point not found - debug info:</h2><pre>' + JSON.stringify(results.data) + '</pre><h3>Looking for a row with latitude, longitude:</h3>' + feature.geometry.coordinates[0].toString() + ',' + feature.geometry.coordinates[1].toString()
                 }
 
                 sidebar.setContent(content)
