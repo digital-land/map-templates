@@ -1,6 +1,6 @@
 .PHONY: init clean build js assets server
 
-NODE_MODULES=node_modules
+NODE_MODULES=./node_modules
 NODE_MODULES_BIN=$(NODE_MODULES)/.bin
 DOCS_DIR=docs/
 SRC_DIR=src/
@@ -14,14 +14,14 @@ clean:
 
 build: assets js
 	mkdir -p $(DOCS_DIR)
-	node generate.js
+	node generate.js --unhandled-rejections=strict
 
 build_prod:
 	IS_PROD=true make build
 
 js:
 	$(NODE_MODULES_BIN)/uglifyjs --compress -o $(DOCS_DIR)map.js -- \
-		$(NODE_MODULES)/leaflet/dist/Leaflet.js \
+		$(NODE_MODULES)/leaflet/dist/leaflet.js \
 		$(NODE_MODULES)/leaflet.markercluster/dist/leaflet.markercluster.js \
 		$(NODE_MODULES)/leaflet.fullscreen/Control.FullScreen.js \
 		$(NODE_MODULES)/leaflet-sidebar/src/L.Control.Sidebar.js \
