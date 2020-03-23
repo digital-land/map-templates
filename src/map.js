@@ -4,6 +4,13 @@ var tiles = L.tileLayer("https://tiles.wmflabs.org/bw-mapnik/{z}/{x}/{y}.png", {
     '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 });
 
+// govuk consistent colours
+var colours = {
+  lightBlue: "#1d70b8",
+  darkBlue: "#003078",
+  brown: "#594d00"
+};
+
 // Map setup
 var latLng = L.latLng(52.561928, -1.464854);
 var map = L.map("map", {
@@ -25,13 +32,13 @@ var geoBoundaries = L.geoJSON(boundaries, {
   style: {
     fillOpacity: 0.2,
     weight: 2,
-    color: "#003078",
-    fillColor: "#1d70b8"
+    color: colours.darkBlue,
+    fillColor: colours.lightBlue
   },
   onEachFeature: function(feature, layer) {
     if (!feature.properties.organisation) {
       return layer.setStyle({
-        fillColor: "red",
+        fillColor: colours.brown,
         fillOpacity: 0.25
       });
     }
@@ -63,8 +70,8 @@ var geoBoundaries = L.geoJSON(boundaries, {
       {
         pointToLayer: function(feature) {
           return L.circle(feature.geometry.coordinates, {
-            color: "red",
-            fillColor: "#f03",
+            color: colours.brown,
+            fillColor: colours.brown,
             fillOpacity: 0.5,
             radius: feature.properties.size.toFixed(2)
           });
