@@ -26,6 +26,156 @@ var sidebar = L.control.sidebar("sidebar", {
   position: "right"
 });
 
+var tooltipTemplate =
+  '<div class="bfs">' +
+  "{hasEndDate}" +
+  '<div class="bfs__header">' +
+  '<span class="govuk-caption-s">{siteRef}</span>' +
+  '<h3 class="govuk-heading-s bfs__addr">{address}</h3>' +
+  "<span>From:" +
+  "{ancherToOrg}" +
+  "</span>" +
+  "</div>" +
+  '<div class="govuk-grid-row bfs__key-data">' +
+  '<dl class="govuk-grid-column-one-half">' +
+  "<dt>Hectare</dt>" +
+  "<dd>{hectares}</dd>" +
+  "</dl>" +
+  '<dl class="govuk-grid-column-one-half">' +
+  "<dt>Dwellings</dt>" +
+  "<dd>{isRange}</dd>" +
+  "</dl>" +
+  "</div>" +
+  '<div class="bfs__planning bfs__property-list">' +
+  '<h4 class="govuk-heading-xs govuk-!-margin-top-2">Site planning details</h4>' +
+  "<dl>" +
+  "<dt>Planning permission status:</dt>" +
+  "<dd>{planningPermissionStatus}</dd>" +
+  "</dl>" +
+  "<dl>" +
+  "<dt>Planning permission type:</dt>" +
+  "<dd>{planningPermissionType}</dd>" +
+  "</dl>" +
+  "<dl>" +
+  "<dt>Ownership:</dt>" +
+  "<dd>{ownership}</dd>" +
+  "</dl>" +
+  "<dl>" +
+  "<dt>Deliverable:</dt>" +
+  "<dd>{deliverable}</dd>" +
+  "</dl>" +
+  "<dl>" +
+  "<dt>Hazardous substances:</dt>" +
+  "<dd>{hazardousSubstances}</dd>" +
+  "</dl>" +
+  "{sitePlanAnchor}" +
+  "</div>" +
+  '<div class="bfs__meta">' +
+  '<h4 class="govuk-heading-xs">Site metadata</h4>' +
+  "<dl>" +
+  "<dt>Latitude:</dt>" +
+  "<dd>{latitude}</dd>" +
+  "</dl>" +
+  "<dl>" +
+  "<dt>Longitude:</dt>" +
+  "<dd>{longitude}</dd>" +
+  "</dl>" +
+  "{differentDates}" +
+  "</div>" +
+  "</div>";
+
+function hasEndDate(data) {
+  if (data["endDate"]) {
+    return (
+      '<span class="bfs__end-banner">End date: ' + data["endDate"] + "</span>"
+    );
+  }
+  return "";
+}
+
+function makeAnchor(href, text) {
+  return '<a class="govuk-link" href="' + href + '">' + text + "</a>";
+}
+
+function ancherToOrg(data) {
+  var org_name = data["organisation"],
+    url = "#";
+  return '<a class="govuk-link" href="' + url + '">' + org_name + "</a>";
+}
+
+function sitePlanAnchor(data) {
+  if (data["sitePlanUrl"]) {
+    return makeAnchor(data["sitePlanUrl"], "See site plan");
+  }
+  return "";
+}
+
+function isRange(data) {
+  var str = data["minDwell"];
+  if (data["minDwell"] != null) {
+    if (
+      parseInt(data["minDwell"]) !== parseInt(data["maxDwell"]) ||
+      parseInt(data["maxDwell"]) === 0
+    ) {
+      str = data["minDwell"] + "-" + data["maxDwell"];
+    }
+    return str;
+  }
+  return "";
+}
+
+function differentDates(data) {
+  var str =
+    "<dl>" +
+    "<dt>Date added:</dt>" +
+    "<dd>" +
+    data["startDate"] +
+    "</dd>" +
+    "</dl>";
+  if (data["startDate"] != data["updatedDate"]) {
+    return (
+      str +
+      "<dl>" +
+      "<dt>Last updated:</dt>" +
+      "<dd>" +
+      data["updatedDate"] +
+      "</dd>" +
+      "</dl>"
+    );
+  }
+  return str;
+}
+
+function createSidebarContent(row) {
+  console.log(row);
+  processed_row_data = {
+    address: row["site-address"],
+    siteRef: row["site"],
+    endDate: row["end-date"],
+    hectares: row["hectares"],
+    minDwell: row["minimum-net-dwellings"],
+    maxDwell: row["maximum-net-dwellings"],
+    latitude: row["latitude"],
+    longitude: row["longitude"],
+    startDate: row["start-date"],
+    updatedDate: row["entry-date"],
+    organisation: row["organisation"],
+    planningPermissionStatus: row["planning-permission-status"],
+    planningPermissionType: row["planning-permission-type"],
+    ownership: row["ownership"],
+    deliverable: row["deliverable"] || "n/a",
+    hazardousSubstances: row["hazardous-substances"] || "n/a",
+    sitePlanUrl: row["site-plan-url"],
+    //rowNumber: row["row_number"],
+    isRange: isRange,
+    hasEndDate: hasEndDate,
+    differentDates: differentDates,
+    ancherToOrg: ancherToOrg,
+    sitePlanAnchor: sitePlanAnchor
+  };
+  return L.Util.template(tooltipTemplate, processed_row_data);
+}
+
 map.addControl(sidebar);
 
 var geoBoundaries = L.geoJSON(boundaries, {
@@ -97,9 +247,10 @@ var geoBoundaries = L.geoJSON(boundaries, {
                 var content = "";
 
                 if (point) {
-                  Object.keys(point).forEach(function(key) {
-                    content = content + key + ": " + point[key] + "<br>";
-                  });
+                  // Object.keys(point).forEach(function(key) {
+                  //   content = content + key + ": " + point[key] + "<br>";
+                  // });
+                  content = createSidebarContent(point);
                 } else {
                   content =
                     "<h2>Point not found - debug info:</h2><pre>" +
