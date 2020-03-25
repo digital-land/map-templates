@@ -24,7 +24,7 @@ js:
 		$(NODE_MODULES)/leaflet/dist/leaflet.js \
 		$(NODE_MODULES)/leaflet.markercluster/dist/leaflet.markercluster.js \
 		$(NODE_MODULES)/leaflet.fullscreen/Control.FullScreen.js \
-		$(NODE_MODULES)/leaflet-sidebar/src/L.Control.Sidebar.js \
+		./$(SRC_DIR)leaflet-plugins/L.Control.Sidebar.js \
 		$(NODE_MODULES)/papaparse/papaparse.js \
 		$(SRC_DIR)map.js
 
