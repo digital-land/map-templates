@@ -82,6 +82,10 @@ var tooltipTemplate =
   "<dd>{longitude}</dd>" +
   "</dl>" +
   "{differentDates}" +
+  "<dl>" +
+  "<dt>Source:</dt>" +
+  "<dd>{resourceAnchor}</dd>" +
+  "</dl>" +
   "</div>" +
   "</div>";
 
@@ -109,6 +113,12 @@ function sitePlanAnchor(data) {
     return makeAnchor(data["sitePlanUrl"], "See site plan");
   }
   return "";
+}
+
+function resourceAnchor(data) {
+  var url = "https://digital-land.github.io/resource/" + data["resource"];
+  var text = data["resource"].substring(0, 12) + "&hellip;";
+  return makeAnchor(url, text);
 }
 
 function isRange(data) {
@@ -167,12 +177,14 @@ function createSidebarContent(row) {
     deliverable: row["deliverable"] || "n/a",
     hazardousSubstances: row["hazardous-substances"] || "n/a",
     sitePlanUrl: row["site-plan-url"],
+    resource: row["resource"],
     //rowNumber: row["row_number"],
     isRange: isRange,
     hasEndDate: hasEndDate,
     differentDates: differentDates,
     ancherToOrg: ancherToOrg,
-    sitePlanAnchor: sitePlanAnchor
+    sitePlanAnchor: sitePlanAnchor,
+    resourceAnchor: resourceAnchor
   };
   return L.Util.template(tooltipTemplate, processed_row_data);
 }
