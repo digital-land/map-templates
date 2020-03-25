@@ -23,7 +23,8 @@ var map = L.map("map", {
 
 // Sidebar
 var sidebar = L.control.sidebar("sidebar", {
-  position: "right"
+  position: "right",
+  className: "bfs-sidebar"
 });
 
 var tooltipTemplate =

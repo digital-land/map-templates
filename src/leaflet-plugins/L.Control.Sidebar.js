@@ -26,6 +26,7 @@ L.Control.Sidebar = L.Control.extend({
 
     // Style and attach content container
     L.DomUtil.addClass(content, l + "control");
+    L.DomUtil.addClass(container, this.options.className || "");
     container.appendChild(content);
 
     // Create close button and attach it if configured
