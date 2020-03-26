@@ -48,7 +48,7 @@ var tooltipTemplate =
   "</dl>" +
   "</div>" +
   '<div class="bfs__planning bfs__property-list">' +
-  '<h4 class="govuk-heading-xs govuk-!-margin-top-2">Site planning details</h4>' +
+  '<h4 class="govuk-heading-xs govuk-!-margin-top-2">Planning details</h4>' +
   "<dl>" +
   "<dt>Planning permission status:</dt>" +
   "<dd>{planningPermissionStatus}</dd>" +
@@ -72,7 +72,7 @@ var tooltipTemplate =
   "{sitePlanAnchor}" +
   "</div>" +
   '<div class="bfs__meta">' +
-  '<h4 class="govuk-heading-xs">Site metadata</h4>' +
+  '<h4 class="govuk-heading-xs">Metadata</h4>' +
   "<dl>" +
   "<dt>Latitude:</dt>" +
   "<dd>{latitude}</dd>" +
@@ -300,9 +300,7 @@ var geoBoundaries = L.geoJSON(boundaries, {
                     var content = "";
 
                     if (point) {
-                      Object.keys(point).forEach(function(key) {
-                        content = content + key + ": " + point[key] + "<br>";
-                      });
+                      content = createSidebarContent(point);
                     } else {
                       content =
                         "<h2>Point not found - debug info:</h2><pre>" +
