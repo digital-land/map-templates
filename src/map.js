@@ -35,7 +35,7 @@ var tooltipTemplate =
   '<div class="bfs__header">' +
   '<span class="govuk-caption-s">{siteRef}</span>' +
   '<h3 class="govuk-heading-s bfs__addr">{address}</h3>' +
-  "<span>From:" +
+  "<span>From: " +
   "{ancherToOrg}" +
   "</span>" +
   "</div>" +
@@ -105,7 +105,8 @@ function makeAnchor(href, text) {
 }
 
 function ancherToOrg(data) {
-  var org_name = data["organisation"],
+  var org_id = data["organisation"],
+    org_name = data["organisation_name"],
     url = "#";
   return '<a class="govuk-link" href="' + url + '">' + org_name + "</a>";
 }
@@ -159,7 +160,7 @@ function differentDates(data) {
   return str;
 }
 
-function createSidebarContent(row) {
+function createSidebarContent(row, feature) {
   console.log(row);
   processed_row_data = {
     address: row["site-address"],
@@ -173,6 +174,7 @@ function createSidebarContent(row) {
     startDate: row["start-date"],
     updatedDate: row["entry-date"],
     organisation: row["organisation"],
+    organisation_name: feature.properties['organisation_name'],
     planningPermissionStatus: row["planning-permission-status"],
     planningPermissionType: row["planning-permission-type"],
     ownership: row["ownership"],
@@ -189,6 +191,26 @@ function createSidebarContent(row) {
     resourceAnchor: resourceAnchor
   };
   return L.Util.template(tooltipTemplate, processed_row_data);
+}
+
+// maps array of Brownfield points to features needed by L.GeoJson
+function objectsToFeatures(objs, parentFeature) {
+  return objs.map(function(point) {
+    return {
+      type: "Feature",
+      geometry: {
+        type: "Point",
+        coordinates: point.point
+      },
+      properties: {
+        size: point.size
+          ? Math.sqrt((point.size * 10000) / Math.PI)
+          : 100,
+        organisation: parentFeature.properties.organisation.organisation,
+        organisation_name: parentFeature.properties.organisation.name,
+      }
+    };
+  });
 }
 
 map.addControl(sidebar);
@@ -231,21 +253,7 @@ var geoBoundaries = L.geoJSON(boundaries, {
     var geoPoints = L.geoJSON(
       {
         type: "FeatureCollection",
-        features: currentBrownfieldPoints.map(function(point) {
-          return {
-            type: "Feature",
-            geometry: {
-              type: "Point",
-              coordinates: point.point
-            },
-            properties: {
-              size: point.size
-                ? Math.sqrt((point.size * 10000) / Math.PI)
-                : 100,
-              organisation: feature.properties.organisation.organisation
-            }
-          };
-        })
+        features: objectsToFeatures(currentBrownfieldPoints, feature)
       },
       {
         pointToLayer: function(feature) {
@@ -280,7 +288,7 @@ var geoBoundaries = L.geoJSON(boundaries, {
                   // Object.keys(point).forEach(function(key) {
                   //   content = content + key + ": " + point[key] + "<br>";
                   // });
-                  content = createSidebarContent(point);
+                  content = createSidebarContent(point, feature);
                 } else {
                   content =
                     "<h2>Point not found - debug info:</h2><pre>" +
@@ -317,7 +325,7 @@ var geoBoundaries = L.geoJSON(boundaries, {
                     var content = "";
 
                     if (point) {
-                      content = createSidebarContent(point);
+                      content = createSidebarContent(point, feature);
                     } else {
                       content =
                         "<h2>Point not found - debug info:</h2><pre>" +
@@ -341,21 +349,7 @@ var geoBoundaries = L.geoJSON(boundaries, {
     var geoPointsHist = L.geoJSON(
       {
         type: "FeatureCollection",
-        features: historicalBrownfieldPoints.map(function(point) {
-          return {
-            type: "Feature",
-            geometry: {
-              type: "Point",
-              coordinates: point.point
-            },
-            properties: {
-              size: point.size
-                ? Math.sqrt((point.size * 10000) / Math.PI)
-                : 100,
-              organisation: feature.properties.organisation.organisation
-            }
-          };
-        })
+        features: objectsToFeatures(historicalBrownfieldPoints, feature)
       },
       {
         pointToLayer: function(feature) {
@@ -390,7 +384,7 @@ var geoBoundaries = L.geoJSON(boundaries, {
                   // Object.keys(point).forEach(function(key) {
                   //   content = content + key + ": " + point[key] + "<br>";
                   // });
-                  content = createSidebarContent(point);
+                  content = createSidebarContent(point, feature);
                 } else {
                   content =
                     "<h2>Point not found - debug info:</h2><pre>" +
@@ -427,7 +421,7 @@ var geoBoundaries = L.geoJSON(boundaries, {
                     var content = "";
 
                     if (point) {
-                      content = createSidebarContent(point);
+                      content = createSidebarContent(point, feature);
                     } else {
                       content =
                         "<h2>Point not found - debug info:</h2><pre>" +
