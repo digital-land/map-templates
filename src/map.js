@@ -215,6 +215,9 @@ function objectsToFeatures(objs, parentFeature) {
 
 map.addControl(sidebar);
 
+var currentLayers = [];
+var histLayers = [];
+
 var geoBoundaries = L.geoJSON(boundaries, {
   style: {
     fillOpacity: 0.2,
@@ -454,9 +457,32 @@ var geoBoundaries = L.geoJSON(boundaries, {
     })
     .addLayer(geoPoints)
     .addLayer(geoPointsHist);
+  
+    currentLayers.push({ "markers": geoPoints, "parent": brownfieldMarkers});
+    histLayers.push({ "markers": geoPointsHist, "parent": brownfieldMarkers});
 
     map.addLayer(brownfieldMarkers);
   }
 }).addTo(map);
 
 map.fitBounds(geoBoundaries.getBounds());
+
+
+// example functions for hiding/showing current and historical markers
+// need to hook up to controls
+function toggleMarkerLayer(layer_pairs, show) {
+  layer_pairs.forEach(function(layer_pair) {
+    var p = layer_pair.parent;
+    var m = layer_pair.markers;
+    if(show) {
+      p.addLayer(m);
+    } else {
+      p.removeLayer(m);
+    }
+  });
+}
+
+var showHistoricSites = function() { toggleMarkerLayer(histLayers, true) };
+var showCurrentSites = function() { toggleMarkerLayer(currentLayers, true) };
+var hideHistoricSites = function() { toggleMarkerLayer(histLayers, false) };
+var hideCurrentSites = function() { toggleMarkerLayer(currentLayers, false) };
