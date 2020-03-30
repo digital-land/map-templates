@@ -8,7 +8,9 @@ var tiles = L.tileLayer("https://tiles.wmflabs.org/bw-mapnik/{z}/{x}/{y}.png", {
 var colours = {
   lightBlue: "#1d70b8",
   darkBlue: "#003078",
-  brown: "#594d00"
+  brown: "#594d00",
+  //warning_yellow: "#fff7bf"
+  yellow_brown: "#a0964e"
 };
 
 // Map setup
@@ -211,10 +213,25 @@ var geoBoundaries = L.geoJSON(boundaries, {
     ]
       ? brownfield[feature.properties.organisation.organisation]
       : [];
+
+    // separate records based on presence of end-date vale
+    function extractBrownfields(arr, historical) {
+      var reduced_arr = arr.filter(function(site) {
+        if (site['end-date']) {
+          return (historical) ? true : false;
+        }
+        return (historical) ? false : true;
+      });
+      return reduced_arr;
+    }
+
+    var currentBrownfieldPoints = extractBrownfields(brownfieldPoints);
+    var historicalBrownfieldPoints = extractBrownfields(brownfieldPoints, true);
+
     var geoPoints = L.geoJSON(
       {
         type: "FeatureCollection",
-        features: brownfieldPoints.map(function(point) {
+        features: currentBrownfieldPoints.map(function(point) {
           return {
             type: "Feature",
             geometry: {
@@ -321,6 +338,116 @@ var geoBoundaries = L.geoJSON(boundaries, {
       }
     );
 
+    var geoPointsHist = L.geoJSON(
+      {
+        type: "FeatureCollection",
+        features: historicalBrownfieldPoints.map(function(point) {
+          return {
+            type: "Feature",
+            geometry: {
+              type: "Point",
+              coordinates: point.point
+            },
+            properties: {
+              size: point.size
+                ? Math.sqrt((point.size * 10000) / Math.PI)
+                : 100,
+              organisation: feature.properties.organisation.organisation
+            }
+          };
+        })
+      },
+      {
+        pointToLayer: function(feature) {
+          return L.circle(feature.geometry.coordinates, {
+            color: colours.yellow_brown,
+            fillColor: colours.yellow_brown,
+            fillOpacity: 0.5,
+            radius: feature.properties.size.toFixed(2)
+          });
+        },
+        onEachFeature: function(feature, layer) {
+          return layer.on({
+            click: function() {
+              sidebar.setContent("<h2>Loading...</h2>");
+              sidebar.show();
+
+              if (mapIsLocal) {
+                var point = brownfield[feature.properties.organisation].find(
+                  function(row) {
+                    return (
+                      row["latitude"] ===
+                        feature.geometry.coordinates[0].toString() &&
+                      row["longitude"] ===
+                        feature.geometry.coordinates[1].toString()
+                    );
+                  }
+                );
+
+                var content = "";
+
+                if (point) {
+                  // Object.keys(point).forEach(function(key) {
+                  //   content = content + key + ": " + point[key] + "<br>";
+                  // });
+                  content = createSidebarContent(point);
+                } else {
+                  content =
+                    "<h2>Point not found - debug info:</h2><pre>" +
+                    JSON.stringify(results.data) +
+                    "</pre><h3>Looking for a row with latitude, longitude:</h3>" +
+                    feature.geometry.coordinates[0].toString() +
+                    "," +
+                    feature.geometry.coordinates[1].toString();
+                }
+
+                return sidebar.setContent(content);
+              }
+
+              // Could be smarter here and fill an object to stop loading if more than one point is clicked
+              return Papa.parse(
+                "https://raw.githubusercontent.com/digital-land/map/master/docs/data/brownfield/" +
+                  feature.properties.organisation
+                    .toLowerCase()
+                    .replace(":", "-") +
+                  ".csv",
+                {
+                  download: true,
+                  header: true,
+                  complete: function(results) {
+                    var point = results.data.find(function(row) {
+                      return (
+                        row.latitude ===
+                          feature.geometry.coordinates[0].toString() &&
+                        row.longitude ===
+                          feature.geometry.coordinates[1].toString()
+                      );
+                    });
+
+                    var content = "";
+
+                    if (point) {
+                      content = createSidebarContent(point);
+                    } else {
+                      content =
+                        "<h2>Point not found - debug info:</h2><pre>" +
+                        JSON.stringify(results.data) +
+                        "</pre><h3>Looking for a row with latitude, longitude:</h3>" +
+                        feature.geometry.coordinates[0].toString() +
+                        "," +
+                        feature.geometry.coordinates[1].toString();
+                    }
+
+                    sidebar.setContent(content);
+                  }
+                }
+              );
+            }
+          });
+        }
+      }
+    );
+
     var brownfieldMarkers = L.markerClusterGroup({
       showCoverageOnHover: false,
       zoomToBoundsOnClick: false,
@@ -330,7 +457,9 @@ var geoBoundaries = L.geoJSON(boundaries, {
       disableClusteringAtZoom: 11,
       maxClusterRadius: 600,
       singleMarkerMode: false
-    }).addLayer(geoPoints);
+    })
+    .addLayer(geoPoints)
+    .addLayer(geoPointsHist);
 
     map.addLayer(brownfieldMarkers);
   }
