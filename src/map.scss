@@ -5,13 +5,14 @@
 .fullscreen-icon { background-image: url(images/icon-fullscreen.png); }
 .leaflet-retina .fullscreen-icon { background-image: url(images/icon-fullscreen-2x.png); background-size: 26px 26px; }
 
+.map-wrapper {
+  width: 960px;
+  margin: 0 auto;
+}
+
 #map {
   width: 960px;
   height: 640px;
-  transform: translate(-50%,-50%);
-  position: absolute;
-  top: 50%;
-  left: 50%;
 }
 
 .leaflet-sidebar {
@@ -29,9 +30,10 @@
 .leaflet-marker-icon.marker-cluster {
   line-height: 18px;
   text-align: center;
-  border-radius: 50%;
-  width: 18px;
-  height: 18px;
-  background: #fff;
-  border: 2px solid #222;
+  //border-radius: 50%;
+  font-weight: bold;
+  //width: 18px;
+  //height: 18px;
+  //background: #fff;
+  //border: 2px solid #222;
 }
