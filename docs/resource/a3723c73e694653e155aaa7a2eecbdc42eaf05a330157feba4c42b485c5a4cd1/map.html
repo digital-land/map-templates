@@ -1,7 +1,23 @@
 <link rel="stylesheet" href="https://digital-land.github.io/map-templates/map.css" crossorigin="" />
+<link href="https://digital-land-design.herokuapp.com/static/stylesheets/dl-frontend.css" rel="stylesheet" />
 
-<div id="map"></div>
-<div id="sidebar"></div>
+<div class="map-wrapper">
+  <div id="map"></div>
+  <div id="sidebar"></div>
+  <div class="map-key">
+      <h4 class="govuk-heading-s govuk-visually-hidden">Key</h4>
+      <div class="map-key__entry">
+        <div class="map-key__entry__item">
+          <div class="bfs-pt__container">
+            <div class="bfs-pt bfs-pt--small"></div>
+            <span class="ellipsis">&hellip;</span>
+            <div class="bfs-pt bfs-pt--large"></div>
+          </div>
+        </div>
+        <p class="map-key__entry__label">Sites sized by hectares</p>
+      </div>
+  </div>
+</div>
 
 <script>
   var boundaries = {"type":"FeatureCollection","features":[]}
