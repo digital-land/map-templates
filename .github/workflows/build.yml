@@ -1,13 +1,17 @@
-name: '[02:00am]: Build map templates'
+name: 'Build map templates'
 
 on:
   push:
-    paths:
-      - 'build.txt'
+    paths-ignore:
+      - 'docs/**'
+      - 'boundaries-collection/**'
+      - 'brownfield-land-collection/**'
+      - 'dataset-collection/**'
+      - 'organisation-collection/**'
     branches:
       - master
   schedule:
-    - cron: '0 2 * * *'
+    - cron: '0 3 * * *'
 
 env:
   GITHUB_ACTOR_EMAIL: ${{ secrets.GITHUB_ACTOR_EMAIL }}
@@ -21,18 +25,19 @@ jobs:
     - uses: actions/checkout@v2
       with:
         submodules: true
-    - run: git submodule update --remote
     - uses: actions/setup-node@v1
       with:
         node-version: '12.x'
-    - run: npm install
-    - run: make clean
-    - run: make build_prod
-    - name: Setup Git and commit latest changes
+    - name: Setup git
       run: |
         git config user.email "${GITHUB_ACTOR_EMAIL}"
         git config user.name "${GITHUB_ACTOR_USERNAME}"
         git remote set-url origin https://${GITHUB_ACTOR_USERNAME}:${GITHUB_ACTOR_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
         git checkout master
+    - name: Install dependencies
+      run: make init
+    - run: make build_prod
+    - name: Commit files
+      run: |
         git add docs/ brownfield-land-collection/ boundaries-collection/ dataset-collection/ organisation-collection/
         git diff --quiet && git diff --staged --quiet || (git commit -m "$(date +%F): Build map templates"; git push origin master)

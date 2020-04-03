@@ -12,7 +12,7 @@ init:
 clean:
 	rm -r $(DOCS_DIR)
 
-build: assets js
+build: clean assets js
 	mkdir -p $(DOCS_DIR)
 	node generate.js --unhandled-rejections=strict
 

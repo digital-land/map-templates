@@ -188,6 +188,41 @@ const actions = {
       console.log('Brownfield by resource: finished map for', resource)
       return fs.writeFileSync(renderedPath, renderedFile)
     }))
+  },
+  async generateByOrganisation (organisations, boundaries) {
+    const simplifiedBoundaries = actions.simplifyBoundaries(organisations, boundaries)
+
+    return organisations.forEach(function (organisation) {
+      console.log(`Organisation: generating blank ${organisation.organisation} map`)
+
+      const renderedDir = path.join(__dirname, `/docs/organisation/${organisation['organisation'].replace(':', '/')}`)
+      const renderedPath = path.join(renderedDir, '/map.html')
+      let singularBoundary = false
+
+      if (organisation['statistical-geography']) {
+        const boundaryPath = path.join(__dirname, `/boundaries-collection/collection/local-authority/${organisation['statistical-geography']}/index.geojson`)
+        if (fs.existsSync(boundaryPath)) {
+          singularBoundary = JSON.parse(fs.readFileSync(boundaryPath, 'utf8'))
+        }
+      }
+
+      if (!singularBoundary && organisation['statistical-geography']) {
+        console.log(organisation.organisation, organisation['statistical-geography'], ': no boundary present')
+      }
+
+      const renderedFile = nunjucks.render(baseFile, {
+        data: {
+          urlPrefix,
+          boundaries: singularBoundary ? actions.simplifyBoundaries(organisations, singularBoundary) : simplifiedBoundaries,
+          brownfield: [],
+          mapIsLocal: true
+        }
+      })
+
+      console.log(`Organisation: finished generating blank ${organisation.organisation} map`)
+      fs.mkdirSync(renderedDir, { recursive: true })
+      return fs.writeFileSync(renderedPath, renderedFile)
+    })
   }
 };
 
@@ -202,4 +237,5 @@ const actions = {
   await actions.generateByDataset(organisations, simplifiedDataPointsRemote, boundaries)
   await actions.generateByDatasetByOrganisation(organisations, simplifiedDataPointsLocal, boundaries)
   await actions.generateByResource(organisations)
+  await actions.generateByOrganisation(organisations, boundaries)
 })()
