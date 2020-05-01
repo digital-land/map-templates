@@ -7,7 +7,7 @@ on:
       - 'boundaries-collection/**'
       - 'brownfield-land-collection/**'
       - 'dataset-collection/**'
-      - 'organisation-collection/**'
+      - 'organisation-dataset/**'
     branches:
       - master
   schedule:
@@ -39,5 +39,5 @@ jobs:
     - run: make build_prod
     - name: Commit files
       run: |
-        git add docs/ brownfield-land-collection/ boundaries-collection/ dataset-collection/ organisation-collection/
+        git add docs/ brownfield-land-collection/ boundaries-collection/ dataset-collection/ organisation-dataset/
         git diff --quiet && git diff --staged --quiet || (git commit -m "$(date +%F): Build map templates"; git push origin master)

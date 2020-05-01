@@ -227,7 +227,7 @@ const actions = {
 };
 
 (async () => {
-  const organisations = await csv().fromFile(path.join(__dirname, '/organisation-collection/collection/organisation.csv'))
+  const organisations = await csv().fromFile(path.join(__dirname, '/organisation-dataset/collection/organisation.csv'))
   const brownfields = await csv().fromFile(path.join(__dirname, '/brownfield-land-collection/index/dataset.csv'))
   const boundaries = JSON.parse(fs.readFileSync(path.join(__dirname, '/boundaries-collection/collection/local-authority/generalised.geojson'), 'utf8'))
 
