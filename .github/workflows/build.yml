@@ -8,8 +8,8 @@ on:
       - 'brownfield-land-collection/**'
       - 'dataset-collection/**'
       - 'organisation-dataset/**'
-    branches:
-      - master
+    branches-ignore:
+      - '**'
   schedule:
     - cron: '0 3 * * *'
 
