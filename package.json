@@ -4,7 +4,13 @@
   "description": "A proof-of-concept for splitting out maps into templates, consumable by Nunjucks",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "css": "./node_modules/.bin/node-sass css/map.scss docs/map.css --output-style=compressed",
+    "prejavascript": "./node_modules/.bin/standard javascript",
+    "javascript": "./node_modules/.bin/uglifyjs ./node_modules/leaflet/dist/leaflet.js ./node_modules/leaflet.snogylop/src/leaflet.snogylop.js javascript/map.js --compress -o docs/map.js",
+    "prestart": "mkdir -p ./docs && npm run all",
+    "start": "node server.js",
+    "all": "npm run css && npm run javascript && npm run organisations",
+    "organisations": "node compilers/organisation.js"
   },
   "repository": {
     "type": "git",
@@ -17,15 +23,20 @@
   },
   "homepage": "https://github.com/digital-land/map-templates#readme",
   "dependencies": {
-    "csvtojson": "^2.0.10",
-    "http-server": "^0.12.1",
+    "csv": "^5.3.2",
+    "express": "^4.17.1",
+    "glob": "^7.1.6",
     "leaflet": "^1.6.0",
     "leaflet-sidebar": "^0.2.0",
     "leaflet.fullscreen": "^1.6.0",
     "leaflet.markercluster": "^1.4.1",
-    "node-sass": "^4.13.1",
+    "leaflet.snogylop": "^0.4.0",
     "nunjucks": "^3.2.1",
-    "papaparse": "^5.2.0",
-    "uglify-js": "^3.8.1"
+    "papaparse": "^5.2.0"
+  },
+  "devDependencies": {
+    "node-sass": "^4.14.1",
+    "standard": "^14.3.4",
+    "uglify-js": "^3.9.4"
   }
 }
