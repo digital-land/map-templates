@@ -10,8 +10,6 @@ on:
       - 'organisation-dataset/**'
     branches-ignore:
       - '**'
-  schedule:
-    - cron: '0 3 * * *'
 
 env:
   GITHUB_ACTOR_EMAIL: ${{ secrets.GITHUB_ACTOR_EMAIL }}
