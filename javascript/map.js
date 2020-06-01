@@ -12,7 +12,17 @@ var map = L.map('map', {
 })
 
 if (boundaries) {
-  var geoBoundaries = L.geoJSON([boundaries])
+  var geoBoundaries = L.geoJSON([boundaries], {
+    style: {
+      stroke: true,
+      color: '#003078',
+      weight: 2,
+      opacity: 1,
+      fill: true,
+      fillOpacity: 0.2,
+      fillColor: '#1d70b8'
+    }
+  })
   map.fitBounds(geoBoundaries.getBounds())
   geoBoundaries.addTo(map)
 }
