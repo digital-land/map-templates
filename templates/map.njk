@@ -1,0 +1,5 @@
+{% import './macro.njk' as mapMacro %}
+
+{{- mapMacro.styles() -}}
+{{- mapMacro.html() -}}
+{{- mapMacro.scripts(boundaries | dump | safe) -}}

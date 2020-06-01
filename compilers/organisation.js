@@ -29,17 +29,20 @@ const actions = {
       return []
     })
   },
-  async generateMap (organisation, boundary) {
-    const slug = `${organisation.organisation.replace(':', '/')}/map.html`
+  async generateTemplates (organisation, boundary) {
+    const slug = `${organisation.organisation.replace(':', '/')}/map`
     const filepath = path.join(process.cwd(), `/docs/organisation/${slug}`)
 
-    const render = nunjucks.render(path.join(process.cwd(), '/templates/organisation.njk'), {
+    const macroFile = await fs.promises.readFile(path.join(process.cwd(), '/templates/macro.njk'), 'utf8')
+    const macroFileReplaced = macroFile.replace('{{ boundaries }}', JSON.stringify(boundary))
+    const macro = await fs.promises.writeFile(`${filepath}.njk`, macroFileReplaced).catch(error => console.log(error))
+
+    const mapFile = nunjucks.render(path.join(process.cwd(), '/templates/map.njk'), {
       boundaries: boundary
     })
+    const map = await fs.promises.writeFile(`${filepath}.html`, mapFile).catch(error => console.log(error))
 
-    return fs.promises.writeFile(filepath, render).catch(error => {
-      console.log(error)
-    })
+    return Promise.all([macro, map])
   }
 };
 
@@ -51,7 +54,7 @@ const actions = {
 
       // Only generate maps for organisations with a boundary
       if (boundary.features && boundary.features.length) {
-        await actions.generateMap(organisation, boundary)
+        await actions.generateTemplates(organisation, boundary)
       }
     }
   }

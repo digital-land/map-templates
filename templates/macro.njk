@@ -1,0 +1,18 @@
+{% macro styles() %}
+  <link rel="stylesheet" href="/map-templates/map.css" crossorigin="" />
+{% endmacro %}
+
+{% macro scripts(boundaries) %}
+  {% if boundaries %}
+    <script>
+      var boundaries = {{ boundaries }}
+    </script>
+  {% endif %}
+  <script src="/map-templates/map.js"></script>
+{% endmacro %}
+
+{% macro html() %}
+  <div id="map">
+    <noscript>To view this map, you need to enable JavaScript.</noscript>
+  </div>
+{% endmacro %}
