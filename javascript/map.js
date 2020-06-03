@@ -11,8 +11,10 @@ var map = L.map('map', {
   preferCanvas: true
 })
 
-if (boundaries) {
-  var geoBoundaries = L.geoJSON([boundaries], {
+var boundsZoomLevels = []
+
+if (boundaries && boundaries.length) {
+  var geoBoundaries = L.geoJSON([], {
     style: {
       stroke: true,
       color: '#003078',
@@ -22,7 +24,24 @@ if (boundaries) {
       fillOpacity: 0.2,
       fillColor: '#1d70b8'
     }
-  })
+  }).addTo(map)
+
+  for (var i = 0; i < boundaries.length; i++) {
+    geoBoundaries.addData(boundaries[i])
+  }
+
   map.fitBounds(geoBoundaries.getBounds())
-  geoBoundaries.addTo(map)
+}
+
+if (points) {
+  var group = points.map(function (point) {
+    return L.circle([point.latitude, point.longitude], {
+      color: '#594d00',
+      fillColor: '#594d00',
+      fillOpacity: 0.5,
+      radius: point.hectares ? Math.sqrt((point.hectares * 10000) / Math.PI) : 100
+    })
+  })
+
+  L.featureGroup(group).addTo(map)
 }
