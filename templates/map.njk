@@ -1,5 +1,8 @@
 {% import './macro.njk' as mapMacro %}
-
 {{- mapMacro.styles() -}}
 {{- mapMacro.html() -}}
-{{- mapMacro.scripts(boundaries | dump | safe) -}}
+{%- if points -%}
+  {{- mapMacro.scripts(boundaries | dump | safe, points | dump | safe) -}}
+{%- else -%}
+  {{- mapMacro.scripts(boundaries | dump | safe) -}}
+{%- endif -%}
