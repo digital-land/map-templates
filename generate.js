@@ -145,7 +145,7 @@ const actions = {
     })
   },
   async generateByResource (organisations) {
-    const resourcesDir = path.join(__dirname, '/brownfield-land-collection/var/transformed')
+    const resourcesDir = path.join(__dirname, '/brownfield-land-collection/transformed')
     const resources = fs.readdirSync(resourcesDir).filter(file => file.endsWith('.csv'))
 
     return Promise.all(resources.map(async resource => {
@@ -228,7 +228,7 @@ const actions = {
 
 (async () => {
   const organisations = await csv().fromFile(path.join(__dirname, '/organisation-dataset/collection/organisation.csv'))
-  const brownfields = await csv().fromFile(path.join(__dirname, '/brownfield-land-collection/index/dataset.csv'))
+  const brownfields = await csv().fromFile(path.join(__dirname, '/brownfield-land-collection/dataset/brownfield-land.csv'))
   const boundaries = JSON.parse(fs.readFileSync(path.join(__dirname, '/boundaries-collection/collection/local-authority/generalised.geojson'), 'utf8'))
 
   const simplifiedDataPointsRemote = actions.simplifyDataPoints(organisations, brownfields, true)
