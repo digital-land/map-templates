@@ -10,6 +10,7 @@ on:
       - 'organisation-dataset/**'
     branches-ignore:
       - '**'
+  workflow_dispatch:
 
 env:
   GITHUB_ACTOR_EMAIL: ${{ secrets.GITHUB_ACTOR_EMAIL }}
